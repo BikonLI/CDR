@@ -45,15 +45,18 @@ def init(work_list: list):
             pic_des = os.path.join(train_images_folder, f"{pic_name}.jpg")
             
             # operations
-            labelConvert(label, label_des)
-            imgcpy(pic, pic_des)
+            rcode = labelConvert(label, label_des)
+            if rcode == 0:
+                rcode = imgcpy(pic, pic_des)
 
 
 def imgcpy(path1, path2):
     try:
         shutil.copy(path1, path2)
+        return 0
     except Exception as e:
         print(f"图片拷贝出现问题 {path1} {path2} {e}")
+        return 1
         
         
 def labelConvert(path1, path2):
@@ -75,9 +78,11 @@ def labelConvert(path1, path2):
                     
                     cx, cy, w, h = xywhToYolo(x0, y0, x1, y1, wid, het)
                     print(f"{int(num)} {cx:.5f} {cy:.5f} {w:.5f} {h:.5f}", file=f2)
+            return 0
             
         except Exception as e:
             print(f"标签转化出现问题 {path1} {path2} {e}")
+            return -1
         
  
 def xywhToYolo(x0, y0, x1, y1, wid, het):
