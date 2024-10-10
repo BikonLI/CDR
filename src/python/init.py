@@ -1,7 +1,11 @@
+import multiprocessing.process
 import os
 import shutil
 import json
 import cv2
+from tqdm import tqdm
+from multitask import MultiTask
+import multiprocessing
 
 root_train_folder = "train_stage2/train"
 images_root = os.path.join(root_train_folder, "images")     # train_stage2/train/images
@@ -20,13 +24,15 @@ os.makedirs(train_images_folder, exist_ok=True)
 os.makedirs(train_labels_folder, exist_ok=True)
 
 
-def init(work_list: list):
+def init(work_list: list, processid: int=0):
     """将数据初始化为yolo可识别的格式
 
     Args:
         work_list (list): ['0', '1', '2' ...]
     """
-    for label_folder in work_list:
+    pgb = tqdm(work_list, desc=f"__init__ {processid:02}", total=len(work_list))
+    
+    for label_folder in pgb:
         index_folder = label_folder     # '0', '1' ...
         
         # train_stage2/train\labels\0
@@ -104,6 +110,30 @@ def xywhToYolo(x0, y0, x1, y1, wid, het):
     
     return centerx / wid, centery / het, w / wid, h / het
 
+
+class MultiT(MultiTask):
+    def __init__(self, tasksNum: int, totalWork: list = ...) -> None:
+        super().__init__(tasksNum, totalWork)
+        self.index = 1
+    
+    def mallocWork(self, totalWork):
+        works = []
+        process_work_num = len(totalWork) // self.tasksNum
+        j = 0
+        for i in range(self.tasksNum):
+            works.append(totalWork[j:j+process_work_num])
+            j += process_work_num
+
+        return works
+    
+    def createTask(self, work):
+        p = multiprocessing.Process(target=init, args=(work, self.index))
+        self.index += 1
+        return p
+    
+
 if __name__ == "__main__":
-    init(work_list)
+    mt = MultiT(4, work_list)
+    mt.start()
+    
     
