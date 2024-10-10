@@ -2,3 +2,6 @@ test_stage2/
 train_stage2/
 val_stage2/
 ultralytics*/
+dataset/
+*.pt
+*.pth

@@ -21,6 +21,11 @@ os.makedirs(train_labels_folder, exist_ok=True)
 
 
 def init(work_list: list):
+    """将数据初始化为yolo可识别的格式
+
+    Args:
+        work_list (list): ['0', '1', '2' ...]
+    """
     for label_folder in work_list:
         index_folder = label_folder     # '0', '1' ...
         
@@ -41,31 +46,59 @@ def init(work_list: list):
             
             # operations
             labelConvert(label, label_des)
+            imgcpy(pic, pic_des)
 
-            
 
 def imgcpy(path1, path2):
-    shutil.copy(path1, path2)
-    
+    try:
+        shutil.copy(path1, path2)
+    except Exception as e:
+        print(f"图片拷贝出现问题 {path1} {path2} {e}")
+        
+        
 def labelConvert(path1, path2):
     with open(path1, "r", encoding="utf-8") as f:
         data = json.load(f)
         
         try:
             objects = data["shapes"]
-            for ob in objects:
-                num = ob["label"]
-                
-                x0, y0 = ob["points"][0]
-                x1, y1 = ob["points"][1]
-                print(num, x0, x1, y0, y1)
+            het = data["imageHeight"]
+            wid = data["imageWidth"]
+            
+            with open(path2, "w", encoding="utf-8") as f2:
+            
+                for ob in objects:
+                    num = ob["label"]
+                    
+                    x0, y0 = ob["points"][0]
+                    x1, y1 = ob["points"][1]
+                    
+                    cx, cy, w, h = xywhToYolo(x0, y0, x1, y1, wid, het)
+                    print(f"{int(num)} {cx:.5f} {cy:.5f} {w:.5f} {h:.5f}", file=f2)
             
         except Exception as e:
             print(f"标签转化出现问题 {path1} {path2} {e}")
         
-        
-            
-            
+ 
+def xywhToYolo(x0, y0, x1, y1, wid, het):
+    """返回归一化的cx, cy, w, h
+
+    Args:
+        x0 (f): tf_x
+        y0 (f): tf_y
+        wid (f): width
+        het (f): height
+
+    Returns:
+        tuple[f]: cx, cy, w, h
+    """
+    centerx = (x0 + x1) / 2
+    centery = (y0 + y1) / 2
+    w = x1 - x0
+    h = y1 - y0
+    
+    return centerx / wid, centery / het, w / wid, h / het
 
 if __name__ == "__main__":
     init(work_list)
+    
