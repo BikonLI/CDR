@@ -1,7 +1,9 @@
 # 导入模块
 import os
 import json
-from recognize_character import *
+import cv2
+from ultralytics import YOLO
+# from recognize_character import *
 
 
 test_stage_images = r"test_stage2\test\images"
@@ -23,10 +25,16 @@ def init_with_m1():
     with open(json_store_path, "w", encoding="utf-8") as jsonfile:
         json.dump(jsondata, jsonfile)
     
+    
+def recognize(imgpath: str):
+    model = YOLO("runs/detect/train7/weights/best.pt")
+    results = model(imgpath, show=True)
+
 
 if __name__ == "__main__":
     # init_with_m1()      # 单纯为了上榜。
-    result = recognize(read_img("val_stage2/val/images/0/0_1.jpg"))
-    print(result)
+    # result = recognize(read_img("val_stage2/val/images/0/0_1.jpg"))
+    # print(result)
+    recognize("val_stage2/val/images/0/0_1.jpg")
     
     

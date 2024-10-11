@@ -2,6 +2,9 @@ test_stage2/
 train_stage2/
 val_stage2/
 ultralytics*/
-dataset/
+datasets/
+runs/
+*.pyc
+test*
 *.pt
 *.pth

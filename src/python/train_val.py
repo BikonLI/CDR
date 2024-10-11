@@ -1,12 +1,12 @@
 # 对预训练模型继续训练  未完成
 from ultralytics import YOLO
 
-model = YOLO("yolo11n.pt")
+model = YOLO("cfg/yolo11.yaml")
 
 if __name__ == "__main__":
 
     result = model.train(
-        data = "cfg/data.yaml", 
+        data = "cfg/data_stage2.yaml", 
         epochs = 30,            # 学习轮次
         imgsz = 720,
         patience = 10,

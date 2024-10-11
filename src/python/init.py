@@ -6,12 +6,13 @@ import cv2
 from tqdm import tqdm
 from multitask import MultiTask
 import multiprocessing
+import random
 
 root_train_folder = "train_stage2/train"
 images_root = os.path.join(root_train_folder, "images")     # train_stage2/train/images
 labels_root = os.path.join(root_train_folder, "labels")     # train_stage2/train/labels
 
-dataset = "dataset"
+dataset = "datasets"
 train_images_folder = os.path.join(dataset, "train", "images")  # dataset/train/images
 train_labels_folder = os.path.join(dataset, "train", "labels")  # dataset/train/labels
 val_images_folder = os.path.join(dataset, "val", "images")      # dataset/val/images
@@ -22,6 +23,8 @@ work_list = os.listdir(labels_root)                 # ['0', '1' ...]   仅为有
 # ---
 os.makedirs(train_images_folder, exist_ok=True)
 os.makedirs(train_labels_folder, exist_ok=True)
+os.makedirs(val_images_folder, exist_ok=True)
+os.makedirs(val_labels_folder, exist_ok=True)
 
 
 def init(work_list: list, processid: int=0):
@@ -111,6 +114,40 @@ def xywhToYolo(x0, y0, x1, y1, wid, het):
     return centerx / wid, centery / het, w / wid, h / het
 
 
+def copyToVal(count: int=1000):
+    """随机选出一些照片作为验证集
+
+    Args:
+        count (int, optional): 需要移动的照片和标签数量. Defaults to 1000.
+
+    Returns:
+        None: 0
+    """
+    images = os.listdir(train_images_folder)
+    index_list = random.sample(range(len(images)), count)
+    pgb = tqdm(index_list, desc="拷贝")
+    for index in pgb:
+        imgName = images[index]
+        name = os.path.splitext(imgName)[0]
+        
+        prim_pic = os.path.join(train_images_folder, f"{name}.jpg")
+        prim_lab = os.path.join(train_labels_folder, f"{name}.txt")
+        
+        dst_pic = os.path.join(val_images_folder, f"{name}.jpg")
+        dst_lab = os.path.join(val_labels_folder, f"{name}.txt")
+        
+        movePicAndLab(prim_pic, dst_pic, prim_lab, dst_lab)
+        
+        
+def movePicAndLab(path1, path2, path3, path4):
+    try:
+        shutil.move(path1, path2)
+        shutil.move(path3, path4)
+        
+    except Exception as e:
+        print(f"剪切照片和标签出现错误 {path1} {path2} {e}")
+        
+
 class MultiT(MultiTask):
     def __init__(self, tasksNum: int, totalWork: list = ...) -> None:
         super().__init__(tasksNum, totalWork)
@@ -134,6 +171,7 @@ class MultiT(MultiTask):
 
 if __name__ == "__main__":
     mt = MultiT(4, work_list)
-    mt.start()
+    # mt.start()
+    copyToVal(50)
     
     

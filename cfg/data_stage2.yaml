@@ -1,9 +1,9 @@
 # dataset config file. Chinese is not allow in this file!
 
 # dataset root dir
-path: dataset/train
-train: images/train
-val: images/val
+path: .
+train: train/images
+val: val/images
 
 # classes  
 names:
