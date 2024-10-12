@@ -27,14 +27,15 @@ def init_with_m1():
     
     
 def recognize(imgpath: str):
-    model = YOLO("runs/detect/train7/weights/best.pt")
+    model = YOLO("runs/detect/train/weights/best.pt")
     results = model(imgpath, show=True)
+    cv2.waitKey(0)
 
 
 if __name__ == "__main__":
     # init_with_m1()      # 单纯为了上榜。
     # result = recognize(read_img("val_stage2/val/images/0/0_1.jpg"))
     # print(result)
-    recognize("val_stage2/val/images/0/0_1.jpg")
+    recognize("train_stage2/train/images/0/0_1.jpg")
     
     

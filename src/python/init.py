@@ -77,6 +77,9 @@ def labelConvert(path1, path2):
             het = data["imageHeight"]
             wid = data["imageWidth"]
             
+            if not objects:
+                return -1
+            
             with open(path2, "w", encoding="utf-8") as f2:
             
                 for ob in objects:
@@ -106,6 +109,10 @@ def xywhToYolo(x0, y0, x1, y1, wid, het):
     Returns:
         tuple[f]: cx, cy, w, h
     """
+    
+    x0, x1 = sorted((x0, x1))
+    y0, y1 = sorted((y0, y1))
+    
     centerx = (x0 + x1) / 2
     centery = (y0 + y1) / 2
     w = x1 - x0
@@ -171,7 +178,7 @@ class MultiT(MultiTask):
 
 if __name__ == "__main__":
     mt = MultiT(4, work_list)
-    # mt.start()
+    mt.start()
     copyToVal(50)
     
     
