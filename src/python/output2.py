@@ -3,6 +3,8 @@ import os
 import json
 import cv2
 from ultralytics import YOLO
+from tqdm import tqdm
+from pose_detect import getKeyPoints, writeKeyPoints
 # from recognize_character import *
 
 
@@ -26,16 +28,31 @@ def init_with_m1():
         json.dump(jsondata, jsonfile)
     
     
-def recognize(imgpath: str):
+def recognize0(imgpath: str):
     model = YOLO("runs/detect/train/weights/best.pt")
     results = model(imgpath, show=True)
     cv2.waitKey(0)
+    
+    
+pointer = 0
+def output_to_result():
+    jsondata = {}
+    for folders in os.listdir(r"D:\CDR\test_stage2\test\images")[pointer:]:
+        folder = os.path.join(r"D:\CDR\test_stage2\test\images", folders)
+        print(folder)
+        number = getKeyPoints(writeKeyPoints(folder))
+        jsondata[f"{folders}"] = int(number)
+
+        with open(json_store_path, "w", encoding="utf-8") as f:
+            json.dump(jsondata, f)
+    
 
 
 if __name__ == "__main__":
+    pointer = 43
     # init_with_m1()      # 单纯为了上榜。
     # result = recognize(read_img("val_stage2/val/images/0/0_1.jpg"))
     # print(result)
-    recognize("train_stage2/train/images/0/0_1.jpg")
-    
+    # recognize0("train_stage2/train/images/0/0_1.jpg")
+    output_to_result()
     

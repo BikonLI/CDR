@@ -71,7 +71,10 @@ def getVerticalLine(point, line: Line):
     if line.k is None:
         return Line(k = 0, b = point[1])
     
-    k = - 1 / line.k
+    if line.k != 0:
+        k = - 1 / line.k
+    else: 
+        return Line(k = 1, b = 1)
     b = point[1] - k * point[0]
     
     return Line(k = k, b = b)
