@@ -4,6 +4,7 @@ val_stage2/
 ultralytics*/
 datasets/
 runs/
+# results_stage2
 *.pyc
 test*
 *.pt

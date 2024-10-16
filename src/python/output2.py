@@ -49,7 +49,7 @@ def output_to_result():
 
 
 if __name__ == "__main__":
-    pointer = 43
+    pointer = 0
     # init_with_m1()      # 单纯为了上榜。
     # result = recognize(read_img("val_stage2/val/images/0/0_1.jpg"))
     # print(result)

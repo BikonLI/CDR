@@ -22,6 +22,15 @@ def writeKeyPoints(imgFolder):
     name_path = os.path.join(results_folder, "name.txt")
     os.makedirs(save_folder, exist_ok=True)
     
+    firstpicPath = os.listdir(imgFolder)[0]
+    img = cv2.imread(os.path.join(imgFolder, firstpicPath))
+    
+    h, w, t = img.shape
+    if h * w < 900:
+        os.makedirs(save_folder, exist_ok=True)
+        print("Football folder, passed.")
+        return save_folder
+    
     try:
         with open(name_path, "r", encoding="utf-8") as f:
             folders = f.readlines()
@@ -224,5 +233,5 @@ if __name__ == "__main__":
     
     for folders in tqdm(os.listdir(r"D:\CDR\test_stage2\test\images")):
         folder = os.path.join(r"D:\CDR\test_stage2\test\images", folders)
-        getKeyPoints(writeKeyPoints(folder))
+        writeKeyPoints(folder)
         
