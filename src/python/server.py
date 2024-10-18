@@ -48,7 +48,7 @@ def getnews():
     
     with open("messages.txt", "r", encoding="utf-8") as f:
         lines = f.readlines()
-        lines.append(news)
+        lines.append(f"{news}\n")
         
     with open("messages.txt", "w", encoding="utf-8") as f:
         f.writelines(lines)
