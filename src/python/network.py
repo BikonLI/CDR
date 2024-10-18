@@ -8,13 +8,10 @@ import json
 app = Flask(__name__)
 @app.route("/detect", methods=["POST"])
 def detect():
-    # try:
-    #     frames = await download_and_detect(request.get_json()["url"])
-    # except Exception as e:
-    #     return {"err": "处理失败：" + str(e)}, 200, {"Content-Type": "application/json"}
+    req = request.get_json()
+    print(req)
 
-    # return {"frames": frames, "err": ""}, 200, {"Content-Type": "application/json"}
-    pass
+    return {"frames": 1, "err": ""}, 200, {"Content-Type": "application/json"}
 
 @app.route("/")
 def test():
