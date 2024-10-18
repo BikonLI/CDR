@@ -6,12 +6,12 @@ import json
 
 
 app = Flask(__name__)
-@app.route("/detect", methods=["POST"])
+@app.route("/detect/", methods=["POST"])
 def detect():
     req = request.get_json()
     print(req)
 
-    return {"frames": 1, "err": ""}, 200, {"Content-Type": "application/json"}
+    return {"frames": 1}, 200, {"Content-Type": "application/json"}
 
 @app.route("/")
 def test():
