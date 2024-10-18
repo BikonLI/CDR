@@ -9,6 +9,8 @@ from typing import *
 que = queue.Queue()
 flag: Literal["AFT", "EOP", "AFP"] = "AFT" # ["await for task", "end of processing", "await for processing"]
 
+news = ""
+
 
 app = Flask(__name__)
 @app.route("/detect/", methods=["POST"])
@@ -35,6 +37,19 @@ def url():
     if not que.empty():
         url = que.get(block=False)
     return {"url": url}
+
+@app.route("/postnews/", method=["POST"])
+def getnews():
+    data = request.get_json()
+    global news
+    news = data.get("news")
+    if news is None:
+        news = ""
+    return "posed"
+
+@app.route("/progress/")
+def pushnews():
+    return news
 
 
 if __name__ == "__main__":

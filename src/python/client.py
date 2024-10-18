@@ -79,9 +79,16 @@ def getJson():
     return res
 
 
+def postNews():
+    news = input("输入事件：")
+    res = requests.post("http://49.233.183.144:11451/postnews/", data={"news": news})
+    if res.text == "posed":
+        print("发送成功！")
+
+
 if __name__ == "__main__":
-    video, frame_folder = downloadVideo("a4.mp4")
-    extract_frames(video, frame_folder)
+    # video, frame_folder = downloadVideo("a4.mp4")
+    # extract_frames(video, frame_folder)
     # while True:
     #     result = getJson()
     #     if result.get("url"):
@@ -89,4 +96,4 @@ if __name__ == "__main__":
     #     time.sleep(3)
         
     # print(result["url"])
-    
+    postNews()
