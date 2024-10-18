@@ -3,19 +3,19 @@ from flask import Flask, request, make_response
 import cv2
 import os
 import json
-from bilix.sites.bilibili import DownloaderBilibili
-from OCR import extract_number_from_str
 import queue
 from typing import *
 
 que = queue.Queue()
 flag: Literal["AFT", "EOP", "AFP"] = "AFT" # ["await for task", "end of processing", "await for processing"]
 
+
 app = Flask(__name__)
 @app.route("/detect/", methods=["POST"])
 def detect():
-    req = request.get_json()
-    que.put(req)
+    req: dict = request.get_json()
+    url = req.get("VIDEO_URL")
+    que.put(url)
 
     if flag == "AFT":
         # 等待任务，返回需要时间处理
@@ -31,7 +31,10 @@ def test():
 
 @app.route("/geturl/")
 def url():
-    return que.get(timeout=1)
+    url = ""
+    if not que.empty():
+        url = que.get(block=False)
+    return {"url": url}
 
 
 
