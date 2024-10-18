@@ -2,35 +2,19 @@ import cv2
 import numpy as np
 import pytesseract
 import re
-
+import torch
+from PIL import Image
+from strhub.data.module import SceneTextDataModule
+from timeout import *
+# from multiprocessing import Process, Value, Queue
 
 
 pytesseract.pytesseract.tesseract_cmd = r"D:\Software\OCR\tesseract.exe"
 
 
 def predict(img):
-    if not is_color_image(img):
+    if img:=clarity(img) is None:
         return ""
-    
-    # 将25x25的小图像放大到100x100
-    ratio = 2
-    het, wid, tun = img.shape
-    img = cv2.resize(img, (0, 0), fx=2, fy=2, interpolation=cv2.INTER_LINEAR)
-
-
-    # 2. 转换为灰度图像
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
-    # 3. 应用高斯模糊去除噪声
-    img = cv2.GaussianBlur(img, (5, 5), 0)
-    # img = cv2.bilateralFilter(img, 9, 75, 75)
-    
-
-    # 4. 图像锐化（使用自定义卷积核）
-    kernel = np.array([[0, -1, 0], 
-                    [-1, 5,-1], 
-                    [0, -1, 0]])
-    img = cv2.filter2D(img, -1, kernel)
     # img = cv2.equalizeHist(img)
     
     # cv2.imshow("img", img)
@@ -43,6 +27,43 @@ def predict(img):
         print(f"预测数字为：{num}")
 
     return num
+
+def predict1(img):
+        
+    if not is_color_image(img):
+        return ""
+    
+    # 计算新尺寸
+    scale_factor = 2
+    new_width = int(img.shape[1] * scale_factor)
+    new_height = int(img.shape[0] * scale_factor)
+
+    # 调整图像大小
+    img = cv2.resize(img, (new_width, new_height), interpolation=cv2.INTER_LINEAR)
+
+    cv2.imshow("small", img)
+
+    # Load model and image transforms
+    parseq = torch.hub.load('baudm/parseq', 'parseq_tiny', pretrained=True).eval()
+    img_transform = SceneTextDataModule.get_transform(parseq.hparams.img_size)
+    
+    # Preprocess. Model expects a batch of images with shape: (B, C, H, W)
+    # img = torch.from_numpy(img)
+    img = Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))  # 转换为 RGB 格式
+    img = img_transform(img).unsqueeze(0)
+
+    logits = parseq(img)
+    logits.shape  # torch.Size([1, 26, 95]), 94 characters + [EOS] symbol
+
+    # Greedy decoding
+    pred = logits.softmax(-1)
+    label, confidence = parseq.tokenizer.decode(pred)
+    
+    number = extract_number_from_str(label[0])
+    
+    return number
+    
+predict = predict1
 
 
 def getRectangle(img,  rectangle: tuple[tuple[int, int]]):
@@ -93,6 +114,31 @@ def is_color_image(img):
 
     return True
 
+def clarity(img):
+    if not is_color_image(img):
+        return None
+    
+    # 将25x25的小图像放大到100x100
+    ratio = 2
+    het, wid, tun = img.shape
+    img = cv2.resize(img, (0, 0), fx=2, fy=2, interpolation=cv2.INTER_LINEAR)
+
+
+    # 2. 转换为灰度图像
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+    # 3. 应用高斯模糊去除噪声
+    img = cv2.GaussianBlur(img, (5, 5), 0)
+    # img = cv2.bilateralFilter(img, 9, 75, 75)
+    
+
+    # 4. 图像锐化（使用自定义卷积核）
+    kernel = np.array([[0, -1, 0], 
+                    [-1, 5,-1], 
+                    [0, -1, 0]])
+    img = cv2.filter2D(img, -1, kernel)
+    return img
+
 
 def extract_number_from_str(string):
 
@@ -105,9 +151,5 @@ def extract_number_from_str(string):
 
 
 if __name__ == "__main__":
-    string_list = ["+213/" for i in range(100)]
-    
-    for string in string_list:
-        number = extract_number_from_str(string)
-        print(number)
+    print(predict(cv2.imread("train_stage2/train/images/0/0_1.jpg")))
         

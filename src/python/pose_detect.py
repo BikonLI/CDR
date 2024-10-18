@@ -6,8 +6,10 @@ from tqdm import tqdm
 from line import Line, getVerticalLine
 from OCR import predict, getRectangle
 from bayes_model import reset_priors, update_probabilities, get_most_likely_number
+from timeout import *
 
 OPENPOSE_ROOT = os.environ.get("OPENPOSE_ROOT")
+record_progress_path = "progress.json"
 
 def writeKeyPoints(imgFolder):
     """同时处理一个文件夹中的所有照片
@@ -59,8 +61,9 @@ def writeKeyPoints(imgFolder):
     return save_folder
 
 
-def getKeyPoints(resultFolder):
-    jsons = os.listdir(resultFolder)
+def getKeyPoints(resultFolder, index): 
+    # 起始位置：poseresult文件夹， 照片文件夹， 结果文件坐标(起始位置)
+    jsons = os.listdir(resultFolder)[index:]
     
     for jsonfile in jsons:
         name: str = jsonfile
@@ -72,6 +75,13 @@ def getKeyPoints(resultFolder):
                 points_conf = data["people"][0]["pose_keypoints_2d"]
             except (KeyError, IndexError) as e:
                 continue
+            
+        with open(record_progress_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            data["file"] = index
+            
+        with open(record_progress_path, "w", encoding="utf-8") as f:
+            json.dump(data, f)
                 
         points = [points_conf[i:i+3] for i in range(0, len(points_conf) - 3, 3)]
         
@@ -194,10 +204,15 @@ def sliceNumberArea(img, points: tuple, weight: float=.65, weight2: float=.95, w
         return ""
     
     img = cv2.rectangle(img, point1, point2, (255, 0, 0), 1)
-    # cv2.imshow("name", img)
-    # cv2.waitKey(0)
+    cv2.imshow("name", img)
+    cv2.waitKey(50)
     img = getRectangle(img, (point1, point2))
+    
     number = predict(img)
+    
+    print(number)
+    if number is None:
+        return ""
     
     return number
     

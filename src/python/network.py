@@ -16,6 +16,10 @@ def detect():
     # return {"frames": frames, "err": ""}, 200, {"Content-Type": "application/json"}
     pass
 
+@app.route("/")
+def test():
+    return "connected"
+
 
 
 def extract_frames(video_path, output_folder):

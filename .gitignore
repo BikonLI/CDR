@@ -4,8 +4,12 @@ val_stage2/
 ultralytics*/
 datasets/
 runs/
+configs/
+strhub/
+parseq/
 # results_stage2
 *.pyc
 test*
 *.pt
 *.pth
+*.exe

@@ -176,15 +176,15 @@ def get_most_likely_number(thresh: float=.833, predictThresh: float=.3):
         first = singles_list[-1]
         second = singles_list[-2]
         summer = sum((singles_statistic[i] for i in singles_list[:-2]))
+        if singles_statistic[second] > summer * 3.7:
+            thresh = thresh * .55
+        elif singles_statistic[second] > summer * 2:
+            thresh = thresh * .7
+        elif singles_statistic[second] > summer * 1.5:
+            thresh = thresh * .8
     except Exception:
         pass
     
-    if singles_statistic[second] > summer * 3.7:
-        thresh = thresh * .55
-    elif singles_statistic[second] > summer * 2:
-        thresh = thresh * .7
-    elif singles_statistic[second] > summer * 1.5:
-        thresh = thresh * .8
     
     if (tens[0] / tens[1]) > thresh:                          # 并判断这两个哪个概率更大，返回概率大的。
         
