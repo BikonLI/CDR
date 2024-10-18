@@ -61,8 +61,8 @@ def writeKeyPoints(imgFolder):
     return save_folder
 
 
-def getKeyPoints(resultFolder, index): 
-    # 起始位置：poseresult文件夹， 照片文件夹， 结果文件坐标(起始位置)
+def getKeyPoints(resultFolder, index, imgs_folder="test_stage2/test/images"): 
+    # 起始位置：poseresult文件夹， 照片文件夹， 结果文件坐标(起始位置), 打榜文件夹
     jsons = os.listdir(resultFolder)[index:]
     
     for jsonfile in jsons:
@@ -94,7 +94,7 @@ def getKeyPoints(resultFolder, index):
         
         name = name.strip("_keypoints.json")
         folderName = os.path.split(resultFolder)[-1]
-        img = cv2.imread(os.path.join("test_stage2/test/images", folderName, f"{name}.jpg"))
+        img = cv2.imread(os.path.join(imgs_folder, folderName, f"{name}.jpg"))
         
         point = [(int(_[0]), int(_[1])) for _ in (rsholder, lsholder, rhip, lhip, mt, md)]
         # drawPoints(point, img)    

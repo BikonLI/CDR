@@ -2,8 +2,11 @@
 import os
 import cv2
 import json
+import time
 from bilix.sites.bilibili import DownloaderBilibili
 from OCR import extract_number_from_str
+import requests
+
 
 def extract_frames(video_path, output_folder):
     """
@@ -14,7 +17,9 @@ def extract_frames(video_path, output_folder):
     """
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
-    else: return 1                  # 文件夹已存在，直接返回，不再进行提取帧
+    else:
+        print("视频已处理") 
+        return 1                  # 文件夹已存在，直接返回，不再进行提取帧
 
     cap = cv2.VideoCapture(video_path)
 
@@ -46,9 +51,9 @@ def downloadVideo(url: str):
     try:
         with open(record_json, "r", encoding="utf-8") as f:
             data: dict = json.load(f)
-            videoName = data.get("url")
+            videoName = data.get(url)
             if videoName is not None:
-                return videoName
+                return os.path.join("./raw_videos", videoName[0]), os.path.join("./frames", f"{videoName[1]}")
         
         downloader = DownloaderBilibili()
         downloader.download(url, output_dir="./raw_videos")
@@ -63,5 +68,25 @@ def downloadVideo(url: str):
             
         return videoName
     except Exception as e:
+        print(e)
         print("视频下载失败")
         return -1
+    
+
+def getJson():
+    response = requests.get("http://49.233.183.144:11451/geturl/")
+    res = response.json()
+    return res
+
+
+if __name__ == "__main__":
+    video, frame_folder = downloadVideo("a4.mp4")
+    extract_frames(video, frame_folder)
+    # while True:
+    #     result = getJson()
+    #     if result.get("url"):
+    #         break
+    #     time.sleep(3)
+        
+    # print(result["url"])
+    
