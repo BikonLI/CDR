@@ -38,13 +38,21 @@ def url():
         url = que.get(block=False)
     return {"url": url}
 
-@app.route("/postnews/", method=["POST"])
+@app.route("/postnews/", methods=["POST"])
 def getnews():
     data = request.get_json()
     global news
     news = data.get("news")
     if news is None:
         news = ""
+    
+    with open("messages.txt", "r", encoding="utf-8") as f:
+        lines = f.readlines()
+        lines.append(news)
+        
+    with open("messages.txt", "w", encoding="utf-8") as f:
+        f.writelines(lines)
+        
     return "posed"
 
 @app.route("/progress/")
