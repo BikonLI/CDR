@@ -3,7 +3,7 @@ from flask import Flask, request, make_response
 import cv2
 import os
 import json
-
+from bilix.sites.bilibili import DownloaderBilibili
 
 app = Flask(__name__)
 @app.route("/detect/", methods=["POST"])
@@ -50,7 +50,33 @@ def extract_frames(video_path, output_folder):
     return 0                    # 对视频进行了处理
 
 
-
+def downloadVideo(url: str, dstPath: str):
+    record_json = "video_downloads.json"
+    if not os.path.exists(record_json):
+        with open(record_json, "w", encoding="utf-8") as f:
+            pass
+    
+    try:
+        with open(record_json, "r", encoding="utf-8") as f:
+            data: dict = json.load(f)
+            dstPath = data.get("url")
+            if dstPath is not None:
+                return dstPath
+        
+        downloader = DownloaderBilibili()
+        downloader.download(url, output_dir=dstPath)
+        
+        with open(record_json, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            data[url] = dstPath
+            
+        with open(record_json, "w", encoding="utf-8") as f:
+            json.dump(data, f)
+            
+        return dstPath
+    except Exception as e:
+        print("视频下载失败")
+        return -1
 
 
 if __name__ == "__main__":
