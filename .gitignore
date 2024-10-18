@@ -7,6 +7,7 @@ runs/
 configs/
 strhub/
 parseq/
+raw_videos/
 # results_stage2
 *.pyc
 test*
