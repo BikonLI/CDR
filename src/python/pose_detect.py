@@ -11,7 +11,7 @@ from timeout import *
 OPENPOSE_ROOT = os.environ.get("OPENPOSE_ROOT")
 record_progress_path = "progress.json"
 
-def writeKeyPoints(imgFolder):
+def writeKeyPoints(imgFolder, outputtoresult=False):
     """同时处理一个文件夹中的所有照片
 
     Args:
@@ -45,6 +45,9 @@ def writeKeyPoints(imgFolder):
     
     if imgFolder+"\n" in folders:
         print("The folder has already been pose detect.")
+        return save_folder
+    
+    if outputtoresult:
         return save_folder
     
     command = [
@@ -103,6 +106,19 @@ def getKeyPoints(resultFolder, index, imgs_folder="test_stage2/test/images"):
         update_probabilities(number, .1)
     number = get_most_likely_number()
     reset_priors()
+    
+    try:
+        with open(record_progress_path, "r", encoding="utf-8") as f:
+            backup = json.load(f)
+            backup["file"] = 0
+        
+        with open(record_progress_path, "w", encoding="utf-8") as f:
+            data["file"] = 0
+            json.dump(data, f)
+    except Exception:
+        with open(record_progress_path, "w", encoding="utf-8") as f:
+            json.dump(backup, fp=f)
+            return -1
     return number
     
         
@@ -204,8 +220,8 @@ def sliceNumberArea(img, points: tuple, weight: float=.65, weight2: float=.95, w
         return ""
     
     img = cv2.rectangle(img, point1, point2, (255, 0, 0), 1)
-    cv2.imshow("name", img)
-    cv2.waitKey(50)
+    # cv2.imshow("name", img)
+    # cv2.waitKey(50)
     img = getRectangle(img, (point1, point2))
     
     number = predict(img)

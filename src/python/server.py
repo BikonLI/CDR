@@ -18,6 +18,7 @@ def detect():
     req: dict = request.get_json()
     url = req.get("VIDEO_URL")
     que.put(url)
+    global flag
 
     if flag == "AFT":
         # 等待任务，返回需要时间处理
@@ -37,6 +38,14 @@ def url():
     if not que.empty():
         url = que.get(block=False)
     return {"url": url}
+
+
+@app.route("/updateflag/")
+def updateflag():
+    global flag
+    flag = request.args.get("flag", "AFT")
+    print(flag)
+    return "updated"
 
 @app.route("/postnews/", methods=["POST"])
 def getnews():
@@ -58,6 +67,7 @@ def getnews():
 @app.route("/progress/")
 def pushnews():
     return news
+
 
 
 if __name__ == "__main__":

@@ -41,7 +41,7 @@ def predict1(img):
     # 调整图像大小
     img = cv2.resize(img, (new_width, new_height), interpolation=cv2.INTER_LINEAR)
 
-    cv2.imshow("small", img)
+    # cv2.imshow("small", img)
 
     # Load model and image transforms
     parseq = torch.hub.load('baudm/parseq', 'parseq_tiny', pretrained=True).eval()

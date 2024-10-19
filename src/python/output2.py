@@ -56,7 +56,7 @@ def output_to_result():
             
         folder = os.path.join(r"D:\CDR\test_stage2\test\images", folders)
         print(folder)
-        number = getKeyPoints(writeKeyPoints(folder), file)
+        number = getKeyPoints(writeKeyPoints(folder, True), file)
         
         with open(json_store_path, "r", encoding="utf-8") as f:
             jsondata = json.load(f)

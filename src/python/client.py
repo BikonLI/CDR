@@ -6,7 +6,9 @@ import time
 from bilix.sites.bilibili import DownloaderBilibili
 from OCR import extract_number_from_str
 import requests
+from typing import *
 
+flag: Literal["AFT", "EOP", "AFP"] = "AFP"   # ["await for task", "end of processing", "await for processing"]
 
 def extract_frames(video_path, output_folder):
     """
@@ -78,10 +80,15 @@ def getJson():
     res = response.json()
     return res
 
+def setFlag(flag: Literal["AFT", "EOP", "AFP"] = "AFP"):
+    # params={"flag": flag}
+    response = requests.get("http://49.233.183.144:11451/updateflag/", )
+    print(response.text)
+    return response.status_code
 
 if __name__ == "__main__":
-    video, frame_folder = downloadVideo("a4.mp4")
-    extract_frames(video, frame_folder)
+    # video, frame_folder = downloadVideo("a4.mp4")
+    # extract_frames(video, frame_folder)
     # while True:
     #     result = getJson()
     #     if result.get("url"):
@@ -89,3 +96,4 @@ if __name__ == "__main__":
     #     time.sleep(3)
         
     # print(result["url"])
+    print(setFlag())
