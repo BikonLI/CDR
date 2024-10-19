@@ -16,3 +16,4 @@ test*
 *.pth
 *.exe
 progress.json
+messages.txt
