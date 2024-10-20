@@ -17,3 +17,5 @@ test*
 *.exe
 progress.json
 messages.txt
+tasks.txt
+tasks*.txt

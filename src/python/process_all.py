@@ -57,6 +57,7 @@ def writeKeyPoints(imgFolder):
         imgFolder (str): 该路径必须为绝对路径
     """
     save_folder = os.path.join(imgFolder, "results")
+    os.makedirs(save_folder, exist_ok=True)
     
     firstpicPath = os.listdir(imgFolder)[0]
     openpose_exe_path = os.path.join(OPENPOSE_ROOT, ".bin\OpenPoseDemo.exe")
@@ -243,6 +244,9 @@ def sliceNumberArea(img, points: tuple, weight: float=.65, weight2: float=.95, w
         return ""
     
     return number
+
+def processing(url):
+    downloadVideo(url)
     
 
 def main():
@@ -251,6 +255,8 @@ def main():
         print(response.get("url"))
         if response.get("url"):
             print("任务被触发！")
+            
+            
         
 
         
