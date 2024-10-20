@@ -1,5 +1,5 @@
 """与文心智能体之间的桥梁，服务端，网络部署"""
-from flask import Flask, request, make_response
+from flask import Flask, request, make_response, render_template
 import cv2
 import os
 import json
@@ -30,7 +30,7 @@ def detect():
 
 @app.route("/")
 def test():
-    return "connected"
+    return render_template("README.html")
 
 @app.route("/geturl/")
 def url():
