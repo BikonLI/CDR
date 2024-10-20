@@ -16,6 +16,8 @@ if __name__ == "__main__":
     
     with open("tasks.txt", "r", encoding="utf-8") as f:
         folder_list = f.readlines()
+    folder_list = [folder.strip('\n') for folder in folder_list]
+
     for folders in tqdm(folder_list):
         folder = os.path.join(r"D:\CDR\train_stage2\train\images", folders)
         writeKeyPoints(folder)
