@@ -8,6 +8,7 @@ from OCR import extract_number_from_str
 import requests
 from typing import *
 
+
 flag: Literal["AFT", "EOP", "AFP"] = "AFP"   # ["await for task", "end of processing", "await for processing"]
 
 def extract_frames(video_path, output_folder):
@@ -56,6 +57,8 @@ def downloadVideo(url: str):
             videoName = data.get(url)
             if videoName is not None:
                 return os.path.join("./raw_videos", videoName[0]), os.path.join("./frames", f"{videoName[1]}")
+            
+            else: raise NotImplementedError("使用三方链接尚不支持，目前仅可分析a1.mp4, a2.mp4, a3.mp4, a4.mp4。")
         
         downloader = DownloaderBilibili()
         downloader.download(url, output_dir="./raw_videos")
@@ -72,7 +75,7 @@ def downloadVideo(url: str):
     except Exception as e:
         print(e)
         print("视频下载失败")
-        return -1
+        return None
     
 
 def getJson():

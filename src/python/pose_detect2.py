@@ -1,4 +1,5 @@
 from pose_detect import *
+from bayes_model_new import *
 
 
 if __name__ == "__main__":
@@ -21,3 +22,14 @@ if __name__ == "__main__":
     for folders in tqdm(folder_list):
         folder = os.path.join(r"D:\CDR\train_stage2\train\images", folders)
         writeKeyPoints(folder)
+        
+        
+    with open("train_stage2/train/train_gt.json", "r", encoding="utf-8") as f:
+        actual_number = json.load(f)
+
+    for folders in folder_list:
+        folder = os.path.join(r"D:\CDR\train_stage2\train\images", folders)
+        name = os.path.split(folder)
+        number = getKeyPoints(writeKeyPoints(folder), resetPriors=False)
+        train(getPriors(), actual_number[name])
+        

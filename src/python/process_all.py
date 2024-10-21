@@ -15,7 +15,7 @@ from client import *
 # 一个trackId的球员矩形照片放到一个文件夹当中
 def analyze_video(folder: str):
     
-    players = {}
+    folders_list = []
     
     model = YOLO("best.pt")
     for i in range(len(os.listdir(folder))):
@@ -36,10 +36,16 @@ def analyze_video(folder: str):
             os.makedirs(players_images_path, exist_ok=True)
             os.makedirs(pose_detect_result_dir, exist_ok=True)
             
+            folders_list.append(players_images_path)
+            
             people_img = getRectangle(img, people)
             imgName = f"{i}.jpg"
             cv2.imwrite(os.path.join(players_images_path, imgName), people_img)
+            
+            with open(os.path.join(folder, "analyze.txt"), "w", encoding="utf-8") as f:
+                print(f"{i + 1} {trackId} {float(people[0])} {float(people[1])} {float(people[2])} {float(people[3])}", file=f)
     
+    return folders_list
     
             
 
@@ -59,15 +65,7 @@ def writeKeyPoints(imgFolder):
     save_folder = os.path.join(imgFolder, "results")
     os.makedirs(save_folder, exist_ok=True)
     
-    firstpicPath = os.listdir(imgFolder)[0]
-    openpose_exe_path = os.path.join(OPENPOSE_ROOT, ".bin\OpenPoseDemo.exe")
-    img = cv2.imread(os.path.join(imgFolder, firstpicPath))
-    
-    h, w, t = img.shape
-    if h * w < 900:
-        os.makedirs(save_folder, exist_ok=True)
-        print("Football folder, passed.")
-        return save_folder
+    openpose_exe_path = os.path.join(OPENPOSE_ROOT, ".\\bin\\OpenPoseDemo.exe")
     
     markfile = os.path.join(save_folder, "marked.done")
     try:
@@ -104,12 +102,6 @@ def getKeyPoints(resultFolder, index, imgs_folder):
             except (KeyError, IndexError) as e:
                 continue
             
-        with open(record_progress_path, "r", encoding="utf-8") as f:
-            data = json.load(f)
-            data["file"] = index
-            
-        with open(record_progress_path, "w", encoding="utf-8") as f:
-            json.dump(data, f)
                 
         points = [points_conf[i:i+3] for i in range(0, len(points_conf) - 3, 3)]
         
@@ -245,18 +237,70 @@ def sliceNumberArea(img, points: tuple, weight: float=.65, weight2: float=.95, w
     
     return number
 
-def processing(url):
-    downloadVideo(url)
+def trackIdMatToNumber(mapping: dict, trackID):
+    for key, values in mapping.items():
+        if trackID in values:
+            return key
     
+
+def updata_results(folder, mapping: dict):
+    with open(os.path.join(folder, "analyze.txt"), "r", encoding="utf-8") as f:
+        all_frame_player = f.readlines()
+    all_frame_player = [line.split(' ') for line in all_frame_player]
+    for line in all_frame_player:
+        trackId = int(line[1])
+        number = trackIdMatToNumber(mapping, trackID=trackId)
+        line[1] = number
+        
+    with open(os.path.join(folder, "analyze.txt"), "w", encoding="utf-8") as f:
+        for line in all_frame_player:
+            line_str = ' '.join(line)
+            print(line_str, file=f)
+    
+    return os.path.join(folder, "analyze.txt")
+
+
+def processing(url):
+    setFlag("AFP")
+    folders = downloadVideo(url)
+    
+    number_trackid_map = {}
+    if folders is not None:
+        videoPath, frameSaveFolder = folders
+        cwd = os.getcwd()
+        frameSaveFolder = os.path.join(cwd, frameSaveFolder)
+        print(f"帧保存绝对路径={frameSaveFolder}")
+        rcode = extract_frames(videoPath, frameSaveFolder)
+        playersFolders = analyze_video(frameSaveFolder)
+        
+        for player in playersFolders:
+            pointsSaveFolder = writeKeyPoints(player)
+            trackId = int(os.path.split(player)[-1])
+            number = getKeyPoints(pointsSaveFolder, 0, frameSaveFolder)
+            try:
+                number_trackid_map[f"{number}"].append(trackId)
+            except Exception:
+                number_trackid_map[f"{number}"] = [trackId, ]
+                
+        results_path = updata_results(frameSaveFolder, number_trackid_map)
+        return results_path
+                
+        
 
 def main():
     while True:
         response = getJson()
-        print(response.get("url"))
-        if response.get("url"):
+        url = response.get("url")
+        print(f"url=\"{url}\"")
+        if url:
             print("任务被触发！")
+            result_file = processing(url)
+            
+        time.sleep(3)
             
             
+if __name__ == "__main__":
+    main()
         
 
         

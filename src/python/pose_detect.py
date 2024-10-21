@@ -24,14 +24,6 @@ def writeKeyPoints(imgFolder, outputtoresult=False):
     name_path = os.path.join(results_folder, "name.txt")
     os.makedirs(save_folder, exist_ok=True)
     
-    firstpicPath = os.listdir(imgFolder)[0]
-    img = cv2.imread(os.path.join(imgFolder, firstpicPath))
-    
-    h, w, t = img.shape
-    if h * w < 900:
-        os.makedirs(save_folder, exist_ok=True)
-        print("Football folder, passed.")
-        return save_folder
     
     try:
         with open(name_path, "r", encoding="utf-8") as f:
@@ -64,7 +56,7 @@ def writeKeyPoints(imgFolder, outputtoresult=False):
     return save_folder
 
 
-def getKeyPoints(resultFolder, index, imgs_folder="test_stage2/test/images"): 
+def getKeyPoints(resultFolder, index, imgs_folder="test_stage2/test/images", resetPriors=True): 
     # 起始位置：poseresult文件夹， 照片文件夹， 结果文件坐标(起始位置), 打榜文件夹
     jsons = os.listdir(resultFolder)[index:]
     
@@ -105,7 +97,8 @@ def getKeyPoints(resultFolder, index, imgs_folder="test_stage2/test/images"):
         number = sliceNumberArea(img, point, .65)
         update_probabilities(number, .1)
     number = get_most_likely_number()
-    reset_priors()
+    if resetPriors:
+        reset_priors()
     
     try:
         with open(record_progress_path, "r", encoding="utf-8") as f:
@@ -121,6 +114,20 @@ def getKeyPoints(resultFolder, index, imgs_folder="test_stage2/test/images"):
             return -1
     return number
     
+    
+def writeKeyPointsPatck(frames_folder_root, results_folder_root):
+    
+    all_folders = os.listdir(results_folder_root)
+    for folder in all_folders:
+        folderName = os.path.split(folder)[-1]
+        folder = os.path.join(results_folder_root, folder)
+        jsonresults = os.listdir(folder)
+        amount = len(jsonresults)
+        if amount == 0:
+            print(frames_folder_root)
+            print(folderName)
+            writeKeyPoints(os.path.join(frames_folder_root, folderName))
+            
         
 
 def sliceNumberArea(img, points: tuple, weight: float=.65, weight2: float=.95, weight3: float=.3):
@@ -265,4 +272,6 @@ if __name__ == "__main__":
     for folders in tqdm(os.listdir(r"D:\CDR\test_stage2\test\images")):
         folder = os.path.join(r"D:\CDR\test_stage2\test\images", folders)
         writeKeyPoints(folder)
+        
+    writeKeyPointsPatck(/*需填写*/)
         
