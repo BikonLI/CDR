@@ -120,6 +120,8 @@ def writeKeyPointsPatck(frames_folder_root, results_folder_root):
     all_folders = os.listdir(results_folder_root)
     for folder in all_folders:
         folderName = os.path.split(folder)[-1]
+        if folderName == "name.txt":
+            continue
         folder = os.path.join(results_folder_root, folder)
         jsonresults = os.listdir(folder)
         amount = len(jsonresults)
@@ -273,5 +275,4 @@ if __name__ == "__main__":
         folder = os.path.join(r"D:\CDR\test_stage2\test\images", folders)
         writeKeyPoints(folder)
         
-    writeKeyPointsPatck(/*需填写*/)
         

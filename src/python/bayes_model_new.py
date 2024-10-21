@@ -32,7 +32,8 @@ def reset_priors():
 
         
 reset_priors()
-ocr_error_model_100 = np.random() ###
+ocr_error_model_100 = np.ones((100, 100))
+ocr_error_model_100 = ocr_error_model_100 / np.sum(ocr_error_model_100)
 
 
 def update_probabilities(ocr_result, refresh_rate=0.5):
