@@ -17,11 +17,12 @@ def gen_ocr_error_model_100():
     for i in range(100):
         for j in range(100):       
             overlaping_rate = calculate_num_overlaping_rate(i, j)
-            # print(f"{i} {j} {overlaping_rate}")
+            print(f"{i} {j} {overlaping_rate}")
             ocr_error_model_100[i, j] = overlaping_rate
             
     ocr_error_model_100 = ocr_error_model_100 / np.sum(ocr_error_model_100)
     print(ocr_error_model_100)
+    return ocr_error_model_100
             
 
 def calculate_num_overlaping_rate(i, j):
@@ -48,7 +49,7 @@ def calculate_num_overlaping_rate(i, j):
         result[1] = 1 if num1[1] == num2[1] else 0
         
         if num1[0] == num2[1] or num1[1] == num2[0]:
-            bias = .35
+            bias = .255
         else:
             bias = 0.025
     elif len(num1) == 2 and len(num2) == 1:
@@ -56,7 +57,7 @@ def calculate_num_overlaping_rate(i, j):
         result[1] = 1 if num1[1] == num2[0] else 0
         
         if (result[0] + result[1]) == 2:
-            bias = -.2
+            bias = -.333
         if (result[0] + result[1]) == 0:
             bias = .03
     else:
@@ -171,12 +172,19 @@ def getPriors():
     return priors
 
 
-def get_most_likely_number1(thresh: float=.833, predictThresh: float=.3):
+def get_most_likely_number1(thresh: float=.833, predictThresh: float=.01195):
     global priors
     sorted_indices = np.argsort(priors)
-    print(sorted_indices)
+    
+    for i in range(100):
+        print(f"{sorted_indices[i]}:{priors[sorted_indices[i]]}", end=" ")
+    
+    if np.sort(priors)[-1] < predictThresh:
+        return -1
+        
     return int(sorted_indices[-1])
 
 reset_priors()
 
 ocr_error_model_100 = gen_ocr_error_model_100()
+get_most_likely_number1()

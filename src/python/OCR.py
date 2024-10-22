@@ -71,7 +71,7 @@ predict = predict1
 
 def getRectangle(img,  rectangle: tuple[tuple[int, int]]):
     
-    p1, p2 = rectangle[:2], rectangle[2:]
+    p1, p2 = rectangle
     x0, y0 = p1
     x1, y1 = p2
     x, y = x0, y0
