@@ -1,48 +1,40 @@
 import numpy as np
 import os
 
-bayes_model = "./bayes.npy"
-if os.path.exists(bayes_model):
-    ocr_error_model_100 = np.load(bayes_model)
-    
-else:
 
-    ocr_error_model_10 = np.zeros((10, 10))
-    np.fill_diagonal(ocr_error_model_10, 0.9)
 
-    for i in range(10):
-        for j in range(10):
-            if i != j and ocr_error_model_10[i, j] == 0:
-                ocr_error_model_10[i, j] = 0.01
-                
-    ocr_error_model_10 = ocr_error_model_10 / ocr_error_model_10.sum(axis=1, keepdims=True)
-
-    priors = None
-    tens = [0, 0] # tens/total
-
+priors = np.ones(100)
+priors = priors / 100
 
 # 重置概率矩阵
 def reset_priors():
     global priors
-    global tens
-    
     priors = np.ones(100)
     priors = priors / 100
-    tens = [0, 0]
-
-        
+    
 reset_priors()
 ocr_error_model_100 = np.ones((100, 100))
-ocr_error_model_100 = ocr_error_model_100 / np.sum(ocr_error_model_100)
+for i in range(100):
+    for j in range(100):
+        if i == j:
+            ocr_error_model_100[i, j] = .9
+        else:
+            ocr_error_model_100[i, j] = .01
 
+bayes_model = "./bayes.npy"
+if os.path.exists(bayes_model):
+    ocr_error_model_100 = np.load(bayes_model)
 
-def update_probabilities(ocr_result, refresh_rate=0.5):
+print(ocr_error_model_100)
+
+def update_probabilities1(ocr_result, refresh_rate=0.5):
     """
     根据 OCR 结果更新概率。
     - ocr_result: OCR 识别的结果，可能为空或一个数字（0~99）
     - refresh_rate: 刷新速率，值越大，刷新速度越快，影响更新的显著性
     """
     global priors
+    global ocr_error_model_100
     if ocr_result == '' or ocr_result is None:
         # 忽略空结果，不更新概率
         return
@@ -69,10 +61,12 @@ def update_probabilities(ocr_result, refresh_rate=0.5):
     # 应用概率刷新率，防止单次更新导致波动过大
     # priors = priors * likelihoods 
     priors = priors * (1 - refresh_rate) + likelihoods * refresh_rate
+    # print(likelihoods)
     priors /= np.sum(priors)
+    # print(priors)
     
 
-def gradient_descent_update(priors, y_true, ocr_result, learning_rate=0.005):
+def gradient_descent_update(priors, y_true, ocr_result, learning_rate=.01):
     """
     使用梯度下降更新 ocr_error_model_100 的参数
     - ocr_error_model_100: OCR 错误概率矩阵 (100 x 100)
@@ -85,6 +79,7 @@ def gradient_descent_update(priors, y_true, ocr_result, learning_rate=0.005):
     loss = compute_loss(priors, y_true)
     
     # 计算损失函数相对于 ocr_error_model_100 的梯度
+    global ocr_error_model_100
     grad = np.zeros_like(ocr_error_model_100)
     
     # 计算针对每个实际值 X 的梯度
@@ -94,6 +89,7 @@ def gradient_descent_update(priors, y_true, ocr_result, learning_rate=0.005):
     
     # 使用梯度下降更新 OCR 错误概率矩阵
     ocr_error_model_100 -= learning_rate * grad
+    ocr_error_model_100 = ocr_error_model_100 / np.sum(ocr_error_model_100)
     
     return ocr_error_model_100, loss
 
@@ -118,9 +114,20 @@ def train(priors, actual_result):
     y_true[actual_result] = 1
     
     global ocr_error_model_100
+    print("更新前=")
+    print(ocr_error_model_100)
     ocr_error_model_100, loss = gradient_descent_update(priors, y_true, actual_result)
+    print("更新后=")
+    print(ocr_error_model_100)
     print(f"loss={loss}")
     np.save(bayes_model, ocr_error_model_100)
     
 def getPriors():
+    global priors
     return priors
+
+
+def get_most_likely_number1(thresh: float=.833, predictThresh: float=.3):
+    sorted_indices = np.argsort(priors)
+    print(sorted_indices)
+    return int(sorted_indices[-1])

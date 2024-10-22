@@ -11,6 +11,8 @@ from timeout import *
 
 pytesseract.pytesseract.tesseract_cmd = r"D:\Software\OCR\tesseract.exe"
 
+parseq = torch.hub.load('baudm/parseq', 'parseq_tiny', pretrained=True).eval()
+
 
 def predict(img):
     if img:=clarity(img) is None:
@@ -34,6 +36,7 @@ def predict1(img):
         return ""
     
     # 计算新尺寸
+    global parseq
     scale_factor = 2
     new_width = int(img.shape[1] * scale_factor)
     new_height = int(img.shape[0] * scale_factor)
@@ -44,7 +47,7 @@ def predict1(img):
     # cv2.imshow("small", img)
 
     # Load model and image transforms
-    parseq = torch.hub.load('baudm/parseq', 'parseq_tiny', pretrained=True).eval()
+    
     img_transform = SceneTextDataModule.get_transform(parseq.hparams.img_size)
     
     # Preprocess. Model expects a batch of images with shape: (B, C, H, W)
@@ -68,7 +71,7 @@ predict = predict1
 
 def getRectangle(img,  rectangle: tuple[tuple[int, int]]):
     
-    p1, p2 = rectangle
+    p1, p2 = rectangle[:2], rectangle[2:]
     x0, y0 = p1
     x1, y1 = p2
     x, y = x0, y0
@@ -87,6 +90,11 @@ def getRectangle(img,  rectangle: tuple[tuple[int, int]]):
         x1 = img.shape[1]
     if y1 > img.shape[0]:
         y1 = img.shape[0]
+        
+    x = int(x)
+    y = int(y)
+    w = int(w)
+    h = int(h)
 
     cropped_img = img[y:y+h, x:x+w]
     return cropped_img

@@ -28,7 +28,7 @@ def analyze_video(folder: str):
         id_list = result.boxes.id.tolist()
         
         for j in range(len(id_list)):
-            people = xyxy_list[j].tolist()
+            people = xyxy_list[j]
             trackId = int(id_list[j])
             players_images_path = os.path.join(folder, f"{trackId}")
             pose_detect_result_dir = os.path.join(players_images_path, "results")

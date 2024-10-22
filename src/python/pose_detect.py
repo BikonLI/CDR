@@ -5,7 +5,12 @@ import cv2
 from tqdm import tqdm
 from line import Line, getVerticalLine
 from OCR import predict, getRectangle
-from bayes_model import reset_priors, update_probabilities, get_most_likely_number
+from bayes_model_new import get_most_likely_number1, update_probabilities1, reset_priors 
+from bayes_model import (
+    reset_priors as reset,
+    update_probabilities, 
+    get_most_likely_number
+)
 from timeout import *
 
 OPENPOSE_ROOT = os.environ.get("OPENPOSE_ROOT")
@@ -56,7 +61,7 @@ def writeKeyPoints(imgFolder, outputtoresult=False):
     return save_folder
 
 
-def getKeyPoints(resultFolder, index, imgs_folder="test_stage2/test/images", resetPriors=True): 
+def getKeyPoints(resultFolder, index, imgs_folder="test_stage2/test/images", train=False): 
     # 起始位置：poseresult文件夹， 照片文件夹， 结果文件坐标(起始位置), 打榜文件夹
     jsons = os.listdir(resultFolder)[index:]
     
@@ -72,11 +77,11 @@ def getKeyPoints(resultFolder, index, imgs_folder="test_stage2/test/images", res
                 continue
             
         with open(record_progress_path, "r", encoding="utf-8") as f:
-            data = json.load(f)
-            data["file"] = index
+            progress = json.load(f)
+            progress["file"] = index
             
         with open(record_progress_path, "w", encoding="utf-8") as f:
-            json.dump(data, f)
+            json.dump(progress, f)
                 
         points = [points_conf[i:i+3] for i in range(0, len(points_conf) - 3, 3)]
         
@@ -96,9 +101,14 @@ def getKeyPoints(resultFolder, index, imgs_folder="test_stage2/test/images", res
         
         number = sliceNumberArea(img, point, .65)
         update_probabilities(number, .1)
-    number = get_most_likely_number()
-    if resetPriors:
-        reset_priors()
+    
+    if not train:
+        
+        number = get_most_likely_number()
+        reset()
+    else:
+        number = get_most_likely_number1()
+        
     
     try:
         with open(record_progress_path, "r", encoding="utf-8") as f:
@@ -106,8 +116,8 @@ def getKeyPoints(resultFolder, index, imgs_folder="test_stage2/test/images", res
             backup["file"] = 0
         
         with open(record_progress_path, "w", encoding="utf-8") as f:
-            data["file"] = 0
-            json.dump(data, f)
+            progress["file"] = 0
+            json.dump(progress, f)
     except Exception:
         with open(record_progress_path, "w", encoding="utf-8") as f:
             json.dump(backup, fp=f)
@@ -271,8 +281,9 @@ def drawLine(img, line: Line, point, x: int=30):
 
 if __name__ == "__main__":
     
-    for folders in tqdm(os.listdir(r"D:\CDR\test_stage2\test\images")):
-        folder = os.path.join(r"D:\CDR\test_stage2\test\images", folders)
+    IMAGES_ROOT = r"D:\CDR\test_stage2\test\images"
+    for folders in tqdm(os.listdir(IMAGES_ROOT)):
+        folder = os.path.join(IMAGES_ROOT, folders)
         writeKeyPoints(folder)
         
         

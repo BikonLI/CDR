@@ -20,6 +20,7 @@ def extract_frames(video_path, output_folder):
     """
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
+        print("开始提取视频帧")
     else:
         print("视频已处理") 
         return 1                  # 文件夹已存在，直接返回，不再进行提取帧
