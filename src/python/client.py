@@ -22,7 +22,7 @@ def extract_frames(video_path, output_folder):
         os.makedirs(output_folder)
         print("开始提取视频帧")
     else:
-        print("视频已处理") 
+        print("视频帧已被提取") 
         return 1                  # 文件夹已存在，直接返回，不再进行提取帧
 
     cap = cv2.VideoCapture(video_path)
