@@ -1,8 +1,6 @@
 import numpy as np
 import os
 
-
-
 priors = np.ones(100)
 priors = priors / 100
 
@@ -12,20 +10,66 @@ def reset_priors():
     priors = np.ones(100)
     priors = priors / 100
     
-reset_priors()
-ocr_error_model_100 = np.ones((100, 100))
-for i in range(100):
-    for j in range(100):
-        if i == j:
-            ocr_error_model_100[i, j] = .9
+
+def gen_ocr_error_model_100():
+
+    ocr_error_model_100 = np.ones((100, 100))
+    for i in range(100):
+        for j in range(100):       
+            overlaping_rate = calculate_num_overlaping_rate(i, j)
+            # print(f"{i} {j} {overlaping_rate}")
+            ocr_error_model_100[i, j] = overlaping_rate
+            
+    ocr_error_model_100 = ocr_error_model_100 / np.sum(ocr_error_model_100)
+    print(ocr_error_model_100)
+            
+
+def calculate_num_overlaping_rate(i, j):
+    """计算两个整数的重合度
+
+    Args:
+        i (int): 第一个两位数或一位数
+        j (int): 第二个两位数或一位数
+    """
+    num1 = [int(char) for char in str(i)]
+    num2 = [int(char) for char in str(j)]
+    
+    result = [0, 0]
+    
+    if len(num1) == 1 and len(num2) == 2:
+        cur = num1
+        num1 = num2
+        num2 = cur
+    
+    bias = 0
+    
+    if len(num1) == 2 and len(num2) == 2:
+        result[0] = 1 if num1[0] == num2[0] else 0
+        result[1] = 1 if num1[1] == num2[1] else 0
+        
+        if num1[0] == num2[1] or num1[1] == num2[0]:
+            bias = .35
         else:
-            ocr_error_model_100[i, j] = .01
+            bias = 0.025
+    elif len(num1) == 2 and len(num2) == 1:
+        result[0] = 1 if num1[0] == num2[0] else 0
+        result[1] = 1 if num1[1] == num2[0] else 0
+        
+        if (result[0] + result[1]) == 2:
+            bias = -.2
+        if (result[0] + result[1]) == 0:
+            bias = .03
+    else:
+        result = [1, 1] if num1[0] == num2[0] else [0, 0]
+        if (result[0] + result[1]) == 0:
+            bias = .05
+    
+    rate = (result[0] + result[1]) / 2 + bias
+    if rate >= 1:
+        rate = 1
+    
+    return rate
 
-bayes_model = "./bayes.npy"
-if os.path.exists(bayes_model):
-    ocr_error_model_100 = np.load(bayes_model)
-
-print(ocr_error_model_100)
 
 def update_probabilities1(ocr_result, refresh_rate=0.5):
     """
@@ -66,61 +110,61 @@ def update_probabilities1(ocr_result, refresh_rate=0.5):
     # print(priors)
     
 
-def gradient_descent_update(priors, y_true, ocr_result, learning_rate=.01):
-    """
-    使用梯度下降更新 ocr_error_model_100 的参数
-    - ocr_error_model_100: OCR 错误概率矩阵 (100 x 100)
-    - priors: 当前贝叶斯模型输出的概率分布 (100,)
-    - y_true: 真实的标签 (one-hot 编码, 100,)
-    - ocr_result: 当前 OCR 识别出的结果 (整数)
-    - learning_rate: 学习率，控制每次参数更新的幅度
-    """
-    # 计算交叉熵损失
-    loss = compute_loss(priors, y_true)
+# def gradient_descent_update(priors, y_true, ocr_result, learning_rate=.01):
+#     """
+#     使用梯度下降更新 ocr_error_model_100 的参数
+#     - ocr_error_model_100: OCR 错误概率矩阵 (100 x 100)
+#     - priors: 当前贝叶斯模型输出的概率分布 (100,)
+#     - y_true: 真实的标签 (one-hot 编码, 100,)
+#     - ocr_result: 当前 OCR 识别出的结果 (整数)
+#     - learning_rate: 学习率，控制每次参数更新的幅度
+#     """
+#     # 计算交叉熵损失
+#     loss = compute_loss(priors, y_true)
     
-    # 计算损失函数相对于 ocr_error_model_100 的梯度
-    global ocr_error_model_100
-    grad = np.zeros_like(ocr_error_model_100)
+#     # 计算损失函数相对于 ocr_error_model_100 的梯度
+#     global ocr_error_model_100
+#     grad = np.zeros_like(ocr_error_model_100)
     
-    # 计算针对每个实际值 X 的梯度
-    for actual_value in range(100):
-        # 计算该位置的梯度，使用交叉熵公式的导数
-        grad[actual_value, ocr_result] = -y_true[actual_value] / (priors[actual_value] + 1e-8)
+#     # 计算针对每个实际值 X 的梯度
+#     for actual_value in range(100):
+#         # 计算该位置的梯度，使用交叉熵公式的导数
+#         grad[actual_value, ocr_result] = -y_true[actual_value] / (priors[actual_value] + 1e-8)
     
-    # 使用梯度下降更新 OCR 错误概率矩阵
-    ocr_error_model_100 -= learning_rate * grad
-    ocr_error_model_100 = ocr_error_model_100 / np.sum(ocr_error_model_100)
+#     # 使用梯度下降更新 OCR 错误概率矩阵
+#     ocr_error_model_100 -= learning_rate * grad
+#     ocr_error_model_100 = ocr_error_model_100 / np.sum(ocr_error_model_100)
     
-    return ocr_error_model_100, loss
+#     return ocr_error_model_100, loss
 
 
-def compute_loss(priors, y_true):
-    """
-    计算交叉熵损失
-    - priors: 贝叶斯模型输出的概率分布 (100,)
-    - y_true: 真实的标签，one-hot编码 (100,)
-    """
-    # 为了防止log(0)的情况，加入一个小值epsilon
-    epsilon = 1e-8
-    priors = np.clip(priors, epsilon, 1.0 - epsilon)
+# def compute_loss(priors, y_true):
+#     """
+#     计算交叉熵损失
+#     - priors: 贝叶斯模型输出的概率分布 (100,)
+#     - y_true: 真实的标签，one-hot编码 (100,)
+#     """
+#     # 为了防止log(0)的情况，加入一个小值epsilon
+#     epsilon = 1e-8
+#     priors = np.clip(priors, epsilon, 1.0 - epsilon)
     
-    # 计算交叉熵损失
-    loss = -np.sum(y_true * np.log(priors))
-    return loss
+#     # 计算交叉熵损失
+#     loss = -np.sum(y_true * np.log(priors))
+    # return loss
 
 
-def train(priors, actual_result):
-    y_true = np.zeros((100, ))
-    y_true[actual_result] = 1
+# def train(priors, actual_result):
+#     y_true = np.zeros((100, ))
+#     y_true[actual_result] = 1
     
-    global ocr_error_model_100
-    print("更新前=")
-    print(ocr_error_model_100)
-    ocr_error_model_100, loss = gradient_descent_update(priors, y_true, actual_result)
-    print("更新后=")
-    print(ocr_error_model_100)
-    print(f"loss={loss}")
-    np.save(bayes_model, ocr_error_model_100)
+#     global ocr_error_model_100
+#     print("更新前=")
+#     print(ocr_error_model_100)
+#     ocr_error_model_100, loss = gradient_descent_update(priors, y_true, actual_result)
+#     print("更新后=")
+#     print(ocr_error_model_100)
+#     print(f"loss={loss}")
+#     np.save(bayes_model, ocr_error_model_100)
     
 def getPriors():
     global priors
@@ -128,6 +172,11 @@ def getPriors():
 
 
 def get_most_likely_number1(thresh: float=.833, predictThresh: float=.3):
+    global priors
     sorted_indices = np.argsort(priors)
     print(sorted_indices)
     return int(sorted_indices[-1])
+
+reset_priors()
+
+ocr_error_model_100 = gen_ocr_error_model_100()
