@@ -10,7 +10,7 @@ from timeout import *
 from client import *
 from bayes_model_new import update_probabilities1, reset_priors, get_most_likely_number1
 
-def down(folder):
+def done(folder):
     path = os.path.join(folder, "marked.done")
     with open(path, "w", encoding="utf-8") as f:
         f.write(f"{time.time()}")
@@ -41,38 +41,42 @@ def analyze_video(folder: str):
             except Exception as e:
                 continue
         return folders_list
-    try:
-        for i in range(len(os.listdir(folder))):
-            imgPath = os.path.join(folder, f"frame_{i:04}.jpg")
-            print(f"正在追踪 {imgPath}")
+    
+    for i in range(len(os.listdir(folder))):
+        imgPath = os.path.join(folder, f"frame_{i:04}.jpg")
+
+        if f"frame_{i:04}.jpg" not in os.listdir(folder):
+            continue
+
+        print(f"正在追踪 {imgPath}")
+        
+        img = cv2.imread(imgPath)
+        result = model.track(img, persist=True, show=True)[0]
+        
+        xyxy_list = result.boxes.xyxy.tolist()
+        id_list = result.boxes.id.tolist()
+        
+        for j in range(len(id_list)):
+            people = xyxy_list[j]
+            trackId = int(id_list[j])
+            players_images_path = os.path.join(folder, f"{trackId}")
+            pose_detect_result_dir = os.path.join(players_images_path, "results")
             
-            img = cv2.imread(imgPath)
-            result = model.track(img, persist=True, show=True)[0]
+            os.makedirs(players_images_path, exist_ok=True)
+            os.makedirs(pose_detect_result_dir, exist_ok=True)
             
-            xyxy_list = result.boxes.xyxy.tolist()
-            id_list = result.boxes.id.tolist()
+            folders_list.append(players_images_path)
             
-            for j in range(len(id_list)):
-                people = xyxy_list[j]
-                trackId = int(id_list[j])
-                players_images_path = os.path.join(folder, f"{trackId}")
-                pose_detect_result_dir = os.path.join(players_images_path, "results")
-                
-                os.makedirs(players_images_path, exist_ok=True)
-                os.makedirs(pose_detect_result_dir, exist_ok=True)
-                
-                folders_list.append(players_images_path)
-                
-                people_img = getRectangle(img, people)
-                imgName = f"{i}.jpg"
-                cv2.imwrite(os.path.join(players_images_path, imgName), people_img)
-                
-                with open(os.path.join(folder, "analyze.txt"), "a", encoding="utf-8") as f:
-                    print(f"{i + 1} {trackId} {float(people[0])} {float(people[1])} {float(people[2])} {float(people[3])}", file=f)
-    except Exception as e:
-        print(f"发生了错误 {e}")
-        down(folder)
-        pass
+            people = (people[:2], people[2:])
+            print(people)
+            people_img = getRectangle(img, people)
+            imgName = f"{i}.jpg"
+            cv2.imwrite(os.path.join(players_images_path, imgName), people_img)
+            
+            print(os.path.join(folder, "analyze.txt"))
+            with open(os.path.join(folder, "analyze.txt"), "a", encoding="utf-8") as f:
+                print(f"{i + 1} {trackId} {float(people[0][0])} {float(people[0][1])} {float(people[1][0])} {float(people[1][1])}", file=f)
+    done(folder)
     return folders_list
     
             
@@ -104,7 +108,7 @@ def writeKeyPoints(imgFolder):
     subprocess.run(command, cwd=OPENPOSE_ROOT)
     print(f"results have been saved in {save_folder}")
     
-    down(save_folder)
+    done(save_folder)
     return save_folder
 
 
@@ -112,40 +116,40 @@ def getKeyPoints(resultFolder, index, imgs_folder):
     # 起始位置：poseresult文件夹， 照片文件夹， 结果文件坐标(起始位置), 打榜文件夹
     jsons = os.listdir(resultFolder)[index:]
     
-    try:
-        for jsonfile in jsons:
-            name: str = jsonfile
-            jsonfile = os.path.join(resultFolder, jsonfile)
+    for jsonfile in jsons:
+        name: str = jsonfile
+        if name == "marked.done":
+            continue
+        jsonfile = os.path.join(resultFolder, jsonfile)
+        
+        with open(jsonfile, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            try: 
+                points_conf = data["people"][0]["pose_keypoints_2d"]
+            except (KeyError, IndexError) as e:
+                continue
             
-            with open(jsonfile, "r", encoding="utf-8") as f:
-                data = json.load(f)
-                try: 
-                    points_conf = data["people"][0]["pose_keypoints_2d"]
-                except (KeyError, IndexError) as e:
-                    continue
                 
-                    
-            points = [points_conf[i:i+3] for i in range(0, len(points_conf) - 3, 3)]
-            
-            rsholder = points[2][:2]
-            lsholder = points[5][:2]
-            rhip = points[9][:2]
-            lhip = points[12][:2]
-            mt = points[1][:2]
-            md = points[8][:2]
-            
-            name = name.strip("_keypoints.json")
-            img = cv2.imread(os.path.join(imgs_folder, f"{name}.jpg"))
-            
-            point = [(int(_[0]), int(_[1])) for _ in (rsholder, lsholder, rhip, lhip, mt, md)]
-            # drawPoints(point, img)    
-            
-            number = sliceNumberArea(img, point, .65)
-            number = extract_number_from_str(number)
-            update_probabilities1(number, .1)
-            index += 1
-    except Exception as e:
-        print(f"发生错误 {e}")
+        points = [points_conf[i:i+3] for i in range(0, len(points_conf) - 3, 3)]
+        
+        rsholder = points[2][:2]
+        lsholder = points[5][:2]
+        rhip = points[9][:2]
+        lhip = points[12][:2]
+        mt = points[1][:2]
+        md = points[8][:2]
+        
+        name = name.strip("_keypoints.json")
+        img = cv2.imread(os.path.join(imgs_folder, f"{name}.jpg"))
+        print(os.path.join(imgs_folder, f"{name}.jpg"))
+        
+        point = [(int(_[0]), int(_[1])) for _ in (rsholder, lsholder, rhip, lhip, mt, md)]
+        # drawPoints(point, img)    
+        
+        number = sliceNumberArea(img, point, .65)
+        
+        update_probabilities1(number, .1)
+        index += 1
     
     number = get_most_likely_number1()
     reset_priors()
@@ -254,9 +258,10 @@ def sliceNumberArea(img, points: tuple, weight: float=.65, weight2: float=.95, w
     # cv2.waitKey(50)
     img = getRectangle(img, (point1, point2))
     
-    number = predict()
+    number = predict(img)
+    number = extract_number_from_str(number)
     
-    print(number)
+    print(f"预测结果={number}")
     if number is None:
         return ""
     
@@ -279,7 +284,6 @@ def updata_results(folder, mapping: dict):
             afp.append(line.split(" "))
     all_frame_player = afp
     for line in all_frame_player:
-        print(line)
         trackId = int(line[1])
         number = trackIdMatToNumber(mapping, trackID=trackId)
         line[1] = str(number)
@@ -308,7 +312,7 @@ def processing(url):
         for player in playersFolders:
             pointsSaveFolder = writeKeyPoints(player)
             trackId = int(os.path.split(player)[-1])
-            number = getKeyPoints(pointsSaveFolder, 0, frameSaveFolder)
+            number = getKeyPoints(pointsSaveFolder, 0, player)
             print(f"number={number}")
             try:
                 number_trackid_map[f"{number}"].append(trackId)

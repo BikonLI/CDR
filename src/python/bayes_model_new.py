@@ -22,6 +22,7 @@ def gen_ocr_error_model_100():
             
     ocr_error_model_100 = ocr_error_model_100 / np.sum(ocr_error_model_100)
     print(ocr_error_model_100)
+    return ocr_error_model_100
             
 
 def calculate_num_overlaping_rate(i, j):
