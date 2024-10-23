@@ -171,8 +171,8 @@ def getPriors():
     global priors
     return priors
 
-
-def get_most_likely_number1(thresh: float=.833, predictThresh: float=.01125):
+# predictThresh = .1195
+def get_most_likely_number1(thresh: float=.833, predictThresh: float=.01150):
     global priors
     sorted_indices = np.argsort(priors)
     

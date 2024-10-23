@@ -100,7 +100,8 @@ def getKeyPoints(resultFolder, index, imgs_folder="test_stage2/test/images", tra
         # drawPoints(point, img)    
         
         number = sliceNumberArea(img, point, .65)
-        update_probabilities1(number, .1)
+        # refresh_rate = .15
+        update_probabilities1(number, .13)
     
     if not train:
         
