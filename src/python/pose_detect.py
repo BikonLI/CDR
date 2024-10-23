@@ -101,7 +101,7 @@ def getKeyPoints(resultFolder, index, imgs_folder="test_stage2/test/images", tra
         
         number = sliceNumberArea(img, point, .65)
         # refresh_rate = .15
-        update_probabilities1(number, .13)
+        update_probabilities1(number, .20)
     
     if not train:
         
