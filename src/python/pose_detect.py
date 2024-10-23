@@ -101,7 +101,7 @@ def getKeyPoints(resultFolder, index, imgs_folder="test_stage2/test/images", tra
         
         number = sliceNumberArea(img, point, .65)
         # refresh_rate = .15
-        update_probabilities1(number, .20)
+        update_probabilities1(number, .15)
     
     if not train:
         
@@ -236,7 +236,10 @@ def sliceNumberArea(img, points: tuple, weight: float=.65, weight2: float=.95, w
     x0, y0 = point1
     x1, y1 = point2
     
-    if abs(x1 - x0) < abs(y1 - y0) / 2:
+    # if abs(x1 - x0) < abs(y1 - y0) / 2:
+    #     return ""
+    
+    if abs(x1 - x0) <= 3:
         return ""
     
     img = cv2.rectangle(img, point1, point2, (255, 0, 0), 1)

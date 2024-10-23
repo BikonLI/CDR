@@ -8,6 +8,7 @@ configs/
 strhub/
 parseq/
 raw_videos/
+raw_video/
 frames/
 # results_stage2
 *.pyc
