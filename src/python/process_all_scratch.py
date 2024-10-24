@@ -250,8 +250,8 @@ def pose():
     openpose_exe_path = config.OPENPOSE_ROOT / "bin\\OpenPoseDemo.exe"
     
     for ids in all_trackId:
-        people_img_folder = config.players / ids
-        results_folder = config.pose_result / ids
+        people_img_folder = ids
+        results_folder = config.pose_result / ids.name
         
         command = [
             openpose_exe_path,
@@ -278,7 +278,7 @@ def recognize():
     for trackid_folder in result_folders:
         
         for jsonfile in trackid_folder.iterdir():
-            json_name = jsonfile
+            json_name = jsonfile.name
             jsonfile = config.pose_result / jsonfile
         
             with open(jsonfile, "r", encoding="utf-8") as f:
