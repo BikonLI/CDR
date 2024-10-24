@@ -250,8 +250,8 @@ def pose():
     openpose_exe_path = config.OPENPOSE_ROOT / "bin\\OpenPoseDemo.exe"
     
     for ids in all_trackId:
-        people_img_folder = ids
-        results_folder = config.pose_result / ids.name
+        people_img_folder = ids.absolute()
+        results_folder = (config.pose_result / ids.name).absolute()
         
         results_folder.mkdir(exist_ok=True)
         
@@ -298,13 +298,16 @@ def recognize():
             mt = points[1][:2]
             md = points[8][:2]
             
-            pic_name = json_name.strip("_keypoints.json")
-            img_path = config.players / pic_name
+            pic_name = json_name.strip("_keypoints.json") + ".jpg"
+            img_path = config.players / trackid_folder.name / pic_name
             
             point = [(int(_[0]), int(_[1])) for _ in (rsholder, lsholder, rhip, lhip, mt, md)]
         
             img = cv2.imread(img_path)
             rec_points = sna(point)
+
+            if rec_points is None:
+                continue
         
             img = getRectangle(img, rec_points)
             number = predict(img)
@@ -312,9 +315,9 @@ def recognize():
         
         predicted_number = get_number()
         if not num_map_id.get(f"{predicted_number}"):
-            num_map_id[f"{predicted_number}"] = [f"{trackid_folder}", ]
+            num_map_id[f"{predicted_number}"] = [f"{trackid_folder.name}", ]
         else:
-            num_map_id[f"{predicted_number}"].append(f"{trackid_folder}")
+            num_map_id[f"{predicted_number}"].append(f"{trackid_folder.name}")
             
     video_info = config.get_info()
     video_info["map"] = num_map_id
@@ -371,7 +374,7 @@ def mapping(num_map_id: dict, id):
         if id in value:
             return key
         
-    return -1
+    return '-1'
 
 def len_subdir(path):
     dir_path = path

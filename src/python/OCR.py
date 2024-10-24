@@ -43,6 +43,8 @@ def predict1(img):
 
     # 调整图像大小
     img = cv2.resize(img, (new_width, new_height), interpolation=cv2.INTER_LINEAR)
+    cv2.imshow("number", img)
+    cv2.waitKey(300)
 
     # cv2.imshow("small", img)
 
@@ -63,7 +65,8 @@ def predict1(img):
     label, confidence = parseq.tokenizer.decode(pred)
     
     number = extract_number_from_str(label[0])
-    
+    print(f"{number} {confidence}")
+
     return number
     
 predict = predict1
