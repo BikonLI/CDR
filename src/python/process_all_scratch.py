@@ -1,6 +1,7 @@
 """该脚本重新复写本地设备的处理"""
 import os
 import subprocess
+import time
 import cv2
 import json
 from pathlib import Path
@@ -8,6 +9,7 @@ from typing import *
 from ultralytics import YOLO
 from OCR import predict
 from slicenumberarea import sliceNumberArea as sna
+from client import getJson
 from pose_detect import getRectangle
 from bayes_model_new import (
     update_probabilities1 as update_p,
@@ -349,6 +351,19 @@ def update():
     return 0
         
 
+def process_all(video: _VIDEO):
+    config.setVideo(video)
+    
+    extract()
+    track()
+    pose()
+    recognize()
+    update()
+    
+    return 0
+
+   
+    
 # --- 工具函数    
 def mapping(num_map_id: dict, id):
     for key, value in num_map_id.items():
@@ -358,10 +373,20 @@ def mapping(num_map_id: dict, id):
     return -1
             
             
+def main():
+    while True:
+        response = getJson()
+        url = response.get("url")
+        print(f"url=\"{url}\"")
+        if url:
+            process_all(url)
+            break
+            
+        time.sleep(3)
+
 
 if __name__ == "__main__":
-    cg = Config()
-    cg.setVideo("a1.mp4")
+    main()
         
 
 
