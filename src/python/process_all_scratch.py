@@ -374,7 +374,7 @@ def mapping(num_map_id: dict, id):
 
 def len_subdir(path):
     dir_path = path
-    subdirectories = [d for d in dir_path.iterdir() if d.is_dir()]
+    subdirectories = [d for d in dir_path.iterdir()]
     return len(subdirectories)
             
             
