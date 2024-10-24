@@ -253,6 +253,8 @@ def pose():
         people_img_folder = ids
         results_folder = config.pose_result / ids.name
         
+        results_folder.mkdir(exist_ok=True)
+        
         command = [
             openpose_exe_path,
             "--image_dir", people_img_folder,
@@ -279,7 +281,6 @@ def recognize():
         
         for jsonfile in trackid_folder.iterdir():
             json_name = jsonfile.name
-            jsonfile = config.pose_result / jsonfile
         
             with open(jsonfile, "r", encoding="utf-8") as f:
                 data = json.load(f)
