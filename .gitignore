@@ -10,7 +10,12 @@ parseq/
 raw_videos/
 raw_video/
 frames/
-# results_stage2
+frame_video/
+players/
+pose_results/
+raw_video/
+analyze/
+results_stage2/
 *.pyc
 test*
 *.pt
