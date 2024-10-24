@@ -214,7 +214,7 @@ def track():
         return 0
     
     model = YOLO("best.pt")
-    frame_count = len(config.frame_video.iterdir())
+    frame_count = len_subdir(config.frame_video)
     
     for i in range(frame_count):
         pic_name = config.frame_video / Path(f"{i:05}.jpg")
@@ -371,6 +371,11 @@ def mapping(num_map_id: dict, id):
             return key
         
     return -1
+
+def len_subdir(path):
+    dir_path = path
+    subdirectories = [d for d in dir_path.iterdir() if d.is_dir()]
+    return len(subdirectories)
             
             
 def main():
