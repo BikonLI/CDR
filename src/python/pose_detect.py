@@ -5,7 +5,11 @@ import cv2
 from tqdm import tqdm
 from line import Line, getVerticalLine
 from OCR import predict, getRectangle
-from bayes_model_new import get_most_likely_number1, update_probabilities1, reset_priors1 
+from bayes_model_new import (
+    get_most_likely_number1, 
+    update_probabilities1, 
+    reset_priors as reset_priors1
+)
 from bayes_model import (
     reset_priors as reset,
     update_probabilities, 

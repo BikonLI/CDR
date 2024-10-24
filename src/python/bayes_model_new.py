@@ -172,10 +172,11 @@ def getPriors():
     return priors
 
 
-def get_most_likely_number1(thresh: float=.833, predictThresh: float=.3):
+def get_most_likely_number1(thresh: float=.833, predictThresh: float=.01195):
     global priors
     sorted_indices = np.argsort(priors)
-    print(sorted_indices)
+    if priors[sorted_indices[-1]] < .01195:
+        return -1
     return int(sorted_indices[-1])
 
 reset_priors()

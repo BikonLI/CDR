@@ -30,7 +30,7 @@ from bayes_model_new import (
 #   1/ 00001_keypoints.json ...
 # 
 _VIDEO    = Literal["a1.mp4", "a2.mp4", "a3.mp4", "a4.mp4"]
-_PROGRESS = Literal["extract", "track", "pose", "recognize"]
+_PROGRESS = Literal["extract", "track", "pose", "recognize", "update"]
 
 class Config:
     
@@ -76,6 +76,7 @@ class Config:
         self.players: Path = self.PLAYERS_DIR / self.folder_name
         self.pose_result: Path = self.POSE_RESULTS / self.folder_name
         self.analyze: Path = self.ANALYZE / f"{self.folder_name}.txt"
+        self.update: Path = self.ANALYZE / f"{self.folder_name}_final.txt"
         
         print("Several directories are created or detected: ")
         print(self.raw_video.absolute())
@@ -83,6 +84,7 @@ class Config:
         print(self.players.absolute())
         print(self.pose_result.absolute())
         print(self.analyze.absolute())
+        print(self.update.absolute())
         
         self.frame_video.mkdir(exist_ok=True)
         self.players.mkdir(exist_ok=True)
@@ -90,6 +92,10 @@ class Config:
         
         if not self.analyze.exists():
             with open(self.analyze, "w", encoding="utf--8") as f:
+                pass
+        
+        if not self.update.exists():
+            with open(self.update, "w", encoding="utf-8") as f:
                 pass
          
     def extractIsDone(self):
@@ -119,6 +125,15 @@ class Config:
         else:
             return False
         
+    def updateIsDone(self):
+        with open(self.VIDEO_INFO_JSON, "r", encoding="utf-8") as f:
+            video_info = json.load(f)
+            
+        if "update" in video_info[self.video]["progress"]:
+            return True
+        else:
+            return False
+        
     def done(self, work: _PROGRESS):
         with open(self.VIDEO_INFO_JSON, "r", encoding="utf-8") as f:
             video_info = json.load(f)
@@ -140,12 +155,29 @@ class Config:
     def reset_info(self):
         with open(self.VIDEO_INFO_JSON, "w", encoding="utf-8") as f:
             json.dump({
-                "a1.mp4": {"progress": [], "folder": "0"}, 
-                "a2.mp4": {"progress": [], "folder": "1"}, 
-                "a3.mp4": {"progress": [], "folder": "2"}, 
-                "a4.mp4": {"progress": [], "folder": "3"}, 
+                "a1.mp4": {"progress": [], "folder": "0", "map": {}}, 
+                "a2.mp4": {"progress": [], "folder": "1", "map": {}}, 
+                "a3.mp4": {"progress": [], "folder": "2", "map": {}}, 
+                "a4.mp4": {"progress": [], "folder": "3", "map": {}}, 
                 }, f)
             
+    def get_info(self):
+        with open(self.VIDEO_INFO_JSON, "r", encoding="utf-8") as f:
+            info = json.load(f)
+        return info[self.video]
+    
+    def dump_info(self, video_info):
+        with open(self.VIDEO_INFO_JSON, "r", encoding="utf-8") as f:
+            info = json.load(f)
+            
+        info[self.video] = video_info
+        with open(self.VIDEO_INFO_JSON, "w", encoding="utf-8") as f:
+            json.dump(info, f)
+            
+        return 0
+        
+    
+
 config = Config()
             
 def extract():
@@ -207,6 +239,7 @@ def track():
     config.done("track")
     return 0
 
+
 def pose():
     if config.poseIsDone():
         return 0
@@ -216,7 +249,7 @@ def pose():
     
     for ids in all_trackId:
         people_img_folder = config.players / ids
-        results_folder = config.pose_result
+        results_folder = config.pose_result / ids
         
         command = [
             openpose_exe_path,
@@ -231,43 +264,98 @@ def pose():
     config.done("pose")
     return 0
 
+
 def recognize():
+    
     if config.recognizeIsDone():
         return 0
     
-    pose_jsons = config.pose_result.iterdir()
+    num_map_id = {}
+    result_folders = config.pose_result.iterdir()
     
-    for jsonfile in pose_jsons:
-        json_name = jsonfile
-        jsonfile = config.pose_result / jsonfile
+    for trackid_folder in result_folders:
         
-        with open(jsonfile, "r", encoding="utf-8") as f:
-            data = json.load(f)
-            try: 
-                points_conf = data["people"][0]["pose_keypoints_2d"]
-            except (KeyError, IndexError):
-                continue
+        for jsonfile in trackid_folder.iterdir():
+            json_name = jsonfile
+            jsonfile = config.pose_result / jsonfile
+        
+            with open(jsonfile, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                try: 
+                    points_conf = data["people"][0]["pose_keypoints_2d"]
+                except (KeyError, IndexError):
+                    continue
             
-        points = [points_conf[i:i+3] for i in range(0, len(points_conf) - 3, 3)]
+            points = [points_conf[i:i+3] for i in range(0, len(points_conf) - 3, 3)]
+            
+            rsholder = points[2][:2]
+            lsholder = points[5][:2]
+            rhip = points[9][:2]
+            lhip = points[12][:2]
+            mt = points[1][:2]
+            md = points[8][:2]
+            
+            pic_name = json_name.strip("_keypoints.json")
+            img_path = config.players / pic_name
+            
+            point = [(int(_[0]), int(_[1])) for _ in (rsholder, lsholder, rhip, lhip, mt, md)]
         
-        rsholder = points[2][:2]
-        lsholder = points[5][:2]
-        rhip = points[9][:2]
-        lhip = points[12][:2]
-        mt = points[1][:2]
-        md = points[8][:2]
+            img = cv2.imread(img_path)
+            rec_points = sna(point)
         
-        pic_name = json_name.strip("_keypoints.json")
-        img_path = config.players / pic_name
+            img = getRectangle(img, rec_points)
+            number = predict(img)
+            update_p(number, .2)
         
-        point = [(int(_[0]), int(_[1])) for _ in (rsholder, lsholder, rhip, lhip, mt, md)]
+        predicted_number = get_number()
+        if not num_map_id.get(f"{predicted_number}"):
+            num_map_id[f"{predicted_number}"] = [f"{trackid_folder}", ]
+        else:
+            num_map_id[f"{predicted_number}"].append(f"{trackid_folder}")
+            
+    video_info = config.get_info()
+    video_info["map"] = num_map_id
+    config.dump_info(video_info)
+    config.done("recognize")
+    
+    return 0
+
+
+def update():
+    if config.updateIsDone():
+        return 0
+    
+    num_map_id = config.get_info()["map"]
+    
+    with open(config.analyze, "r", encoding="utf-8") as f:
+        lines = f.readlines()
         
-        img = cv2.imread(pic_name)
-        rec_points = sna(point)
+    new_lines = []
+    
+    for line in lines:
+        split_line = line.split(" ")
+        number = mapping(num_map_id, split_line[1].strip())
+        new_split_line = split_line.copy()
+        new_split_line[1] = number
         
-        img = getRectangle(img, rec_points)
-        predict(img)
+        new_line = ' '.join(new_split_line)
+        new_lines.append(new_line)
         
+    with open(config.update, "w", encoding="utf-8") as f:
+        for new_line in new_lines:
+            print(new_line, file=f)
+    
+    config.done("update")
+    return 0
+        
+
+# --- 工具函数    
+def mapping(num_map_id: dict, id):
+    for key, value in num_map_id.items():
+        if id in value:
+            return key
+        
+    return -1
             
             
 
