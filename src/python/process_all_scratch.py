@@ -16,6 +16,7 @@ from bayes_model_new import (
     reset_priors as reset_p,
     get_most_likely_number1 as get_number
 )
+from player_classification import Container
 
 # 文件结构
 # raw_video/
