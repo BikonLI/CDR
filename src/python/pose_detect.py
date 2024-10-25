@@ -201,8 +201,8 @@ def sliceNumberArea(img, points: tuple, weight: float=.65, weight2: float=.95, w
         x0 += xBias
         x1 += xBias
         
-        xscale = .90     # 越小框越小，不会改变框位置
-        yscale = .90
+        xscale = 1     # 越小框越小，不会改变框位置
+        yscale = 1
         
         x0 += (x1 - x0) * (1 - xscale) / 2
         x1 -= (x1 - x0) * (1 - xscale) / 2
@@ -220,15 +220,6 @@ def sliceNumberArea(img, points: tuple, weight: float=.65, weight2: float=.95, w
         return ""
     
     middlePoint = findMiddlePoint(mt, md, weight)
-    hLine = getVerticalLine(middlePoint, Line(mt, md))
-    
-    wid1 = abs(rsholder[0] - lsholder[0])
-    wid2 = abs(rhip[0] - lhip[0])
-    wid = (wid1 + wid2) / 2 * weight2
-    
-    het1 = abs(rsholder[1] - lsholder[1])
-    het2 = abs(rhip[1] - rhip[1])
-    het = (het1 + het2) / 2 * weight3
     
     # drawPoints((middlePoint, rsholder, lsholder, rhip, lhip, mt, md), img)
     point1, point2 = genRectangle(lsholder, rsholder,  rhip, middlePoint)

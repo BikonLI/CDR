@@ -11,7 +11,7 @@ from timeout import *
 
 pytesseract.pytesseract.tesseract_cmd = r"D:\Software\OCR\tesseract.exe"
 
-parseq = torch.hub.load('baudm/parseq', 'abinet', pretrained=True).eval()
+parseq = torch.hub.load('baudm/parseq', 'parseq', pretrained=True).eval()
 
 
 def predict(img):
