@@ -10,6 +10,7 @@ que = queue.Queue()
 flag: Literal["AFT", "EOP", "AFP"] = "AFT" # ["await for task", "end of processing", "await for processing"]
 
 news = ""
+result = None
 
 
 app = Flask(__name__)
@@ -22,11 +23,12 @@ def detect():
 
     if flag == "AFT":
         # 等待任务，返回需要时间处理
-        return {"prompt": "Needing time for processing your video, please wait. You can send the url again to see the progress!", "result": {}}, 200, {"Content-Type": "application/json"}
+        return {"state": "Needing time for processing your video, please wait. You can send the url again to see the progress!", "result": ""}, 200, {"Content-Type": "application/json"}
     elif flag == "AFP":
-        return {"prompt": "Needing time for processing your video, please wait. You can send the url again to see the progress!", "result": {}}, 200, {"Content-Type": "application/json"}
+        return {"state": "Needing time for processing your video, please wait. You can send the url again to see the progress!", "result": ""}, 200, {"Content-Type": "application/json"}
     elif flag == "EOP":
-        return {"prompt": "Finished!", "result": {}}, 200, {"Content-Type": "application/json"}
+        prompt = " ".join(result)
+        return {"state": "Finished!", "result": prompt}, 200, {"Content-Type": "application/json"}
 
 @app.route("/")
 def test():
@@ -39,7 +41,13 @@ def url():
         url = que.get(block=False)
     return {"url": url}
 
-
+@app.route("/process_result/")
+def result():
+    prompt = request.args("prompt", [])
+    print(prompt)
+    global result
+    result = prompt
+    
 @app.route("/updateflag/")
 def updateflag():
     global flag

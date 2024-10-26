@@ -2,12 +2,15 @@ from pathlib import Path
 from typing import *
 import math
 import numpy as np
+from pose_json_parse import *
 
 
 class Event:
     
-    def __init__(self, analyze: Path) -> None:
+    def __init__(self, analyze: Path, left_team_name="left-team", right_team_name="right-team") -> None:
         self.analyze = analyze
+        self.left_team = left_team_name
+        self.right_team = right_team_name
         
         with open(self.analyze, "r", encoding="utf-8") as f:
             self.lines = f.readlines()
@@ -17,11 +20,12 @@ class Event:
         for line in self.lines:
             line = line.split(" ")
             line[0] = int(line[0])
-            line[1] = float(line[1]) 
+            line[1] = int(line[1]) 
             line[2] = float(line[2]) 
             line[3] = float(line[3]) 
             line[4] = float(line[4])
-            line[5] = Path(line[5]) 
+            line[5] = float(line[5]) 
+            line[6] = Path(line[6].strip()) 
             
             frame_count = int(line[0])
             
@@ -41,7 +45,7 @@ class Event:
         for frame in self.frame_info:
             points = []
             for person in frame:
-                points.extend([person[1:3], person[3:]])
+                points.extend([person[1:3], person[3:5]])
             frame_gather_rate = self.cal_gather_rate(points)
             people_count = len(frame)
             
@@ -60,11 +64,11 @@ class Event:
         max_probability = max(score_probability)
     
         return [
-            i for i in range(len(score_probability)) 
+            (i + 40, "score") for i in range(len(score_probability)) 
             if score_probability[i] == max_probability
         ] 
         
-    def attact_detect(self, thresh=20): # 阈值越高，越难检测出进攻事件
+    def attact_detect(self, thresh=100): # 阈值越高，越难检测出进攻事件， 向左进攻和向右。
         last_frame = self.frame_info[0]
         total_offset_list = []
         
@@ -123,20 +127,29 @@ class Event:
                     
         return final_final_result_list
     
-    def goal_detect(self, frame: int, thresh):
-        score_frame = frame + 50
-        end_frame = frame + 70
-        try:
-            self.frame_info[end_frame]
-        except IndexError:
-            end_frame = len(self.frame_info) - 1
-            index_differ = end_frame - frame
-            if index_differ > 20:
-                score_frame = end_frame - 20
-            else:
-                score_frame = frame
+    def goal_detect(self):
+        total_hands_up_count_list = []
+        for frame in self.frame_info:
+            total_hands_up_count = 0
+            for people in frame:
+                pose_file = people[-1]
+                parser = get_keypoint(pose_file)
+                hands_up_count = raising_hand(parser)
+                total_hands_up_count += hands_up_count
+            total_hands_up_count_list.append(total_hands_up_count)
         
-        # celebrate_frames = self.frame_info
+        
+        max_count = max(total_hands_up_count_list)
+            
+        if max_count <= 1:
+            return None
+        
+        most_probably_goal_frame = [
+            (index, "goal") for index in range(len(total_hands_up_count_list) - 1, -1, -1) 
+            if total_hands_up_count_list[index] == max_count
+        ]
+        
+        return most_probably_goal_frame        
         
     @staticmethod
     def if_same_sign(a, b):
@@ -180,12 +193,95 @@ class Event:
         
         return average_distance
     
-
+    def detect(self):
+        attaction_result = self.attact_detect()
+        score_result = self.score_detect()
+        goal_result = self.goal_detect()
+        
+        event_list = attaction_result + score_result + goal_result
+        event_list = sorted(event_list, key=lambda x: x[0])
+        
+        final_result = []
+        per = True
+        for event in event_list[::-1]:
+            if event[0] >= (len(self.frame_info) - 30):
+                continue
+                
             
-     
-     
+            if event[1] == "goal":
+                if per:
+                    final_result.append(event)
+                    per = False
+                else:
+                    continue
+            else:
+                final_result.append(event)
+        
+        final_result = final_result[::-1]
+                                
+        prompt_list = []
+        attack_event = []
+        score_event = []
+        goal_event = []
+        
+        for index, event in enumerate(final_result):
+            
+            if event[1] in ["left", "right"]:
+                try:
+                    if index >= 1:
+                        if final_result[index - 1][1] == "score":
+                            if final_result[index - 1][0] == "left":
+                                prompt_list.append(f"{self.left_team}尝试扑球")
+                            else:
+                                prompt_list.append(f"{self.right_team}尝试扑球")
+                            continue
+                    
+                    if event[1] != attack_event[-1][1]:
+                        if event[1] == "left":
+                            prompt_list.append(f"{self.right_team}防守")
+                        else:
+                            prompt_list.append(f"{self.left_team}防守")
+                    else:
+                        if event[1] == "left":
+                            prompt_list.append(f"{self.right_team}持续进攻")
+                        else:
+                            prompt_list.append(f"{self.left_team}持续进攻")
+                except:
+                    if event[1] == "left":
+                        prompt_list.append(f"{self.right_team}开始进攻了")
+                    else:
+                        prompt_list.append(f"{self.left_team}开始进攻了")
+                
+                attack_event.append(event)
+            
+            if event[1] == "score":
+                if len(attack_event) >= 2:
+                    attack = attack_event[-2]
+                    if attack[1] == "left":
+                        prompt_list.append(f"{self.right_team}射门")
+                    else:
+                        prompt_list.append(f"{self.left_team}射门")
+                else:
+                    continue
+                score_event.append(event)
+                
+            if event[1] == "goal":
+                if len(score_event) == 0:
+                    continue
+                else:
+                    if len(attack_event) == 0:
+                        continue
+                    else:
+                        if attack_event[1] == "left":
+                            prompt_list.append(f"{self.left_team}进球了")
+                        else:
+                            prompt_list.append(f"{self.right_team}进球了")
+                goal_event.append(event)
+        
+        return prompt_list
+        
+
 if __name__ == "__main__":
     event = Event(Path("analyze/0.txt"))
-    print(event.attact_detect())
-    print(max(event.score_detect()))
+    print(event.detect())
     

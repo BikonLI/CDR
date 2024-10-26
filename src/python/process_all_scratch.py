@@ -18,6 +18,10 @@ from bayes_model_new import (
 )
 from player_classification import Container
 from path_config import config
+from url_parse import video_download
+from event_detection import Event
+import requests
+
 
 # 文件结构
 # raw_video/
@@ -211,10 +215,24 @@ def update():
     
     config.done("update")
     return 0
+
+def gen_prompt():
+    prompt_list = Event(config.analyze).detect()
+    prompt = {"prompt": prompt_list}
+    requests.post()
+    
         
 
-def process_all(video: _VIDEO):
-    config.setVideo(video)
+def process_all(url):
+    
+    rcode = video_download(url)
+    if rcode != 0:
+        return -1
+    
+    with open(config.RAW_VIDEO_DIR / "mapping.json", "r", encoding="utf-8") as f:
+        url_map_path = json.load(f)
+        
+    config.setVideo(url_map_path[url])
     
     extract()
     track()
@@ -246,7 +264,7 @@ def main():
         url = response.get("url")
         print(f"url=\"{url}\"")
         if url:
-            process_all(url)
+            rcode = process_all(url)
             break
             
         time.sleep(3)
