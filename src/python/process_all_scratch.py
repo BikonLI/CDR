@@ -237,6 +237,7 @@ def track():
             cv2.imwrite(person_img_save_path, person_img)
             
             with open(config.analyze, "a", encoding="utf-8") as f:
+                pose_file = config.pose_result / id_folder.name / f"{i}_keypoints.json"
                 print(f"{i} {trackId} {xyxy[0]} {xyxy[1]} {xyxy[2]} {xyxy[3]}", file=f)
         
     config.done("track")
