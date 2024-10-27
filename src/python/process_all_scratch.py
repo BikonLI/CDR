@@ -226,12 +226,14 @@ def gen_prompt():
     
 def process_all(url):
     
+    setFlag("AFP")
     try:
         rcode = video_download(url)
         if rcode != 0:
             return -1
     except Exception:
         print("视频下载失败，链接不合法")
+        setFlag("AFT")
         
     with open(config.RAW_VIDEO_DIR / "mapping.json", "r", encoding="utf-8") as f:
         url_map_path = json.load(f)

@@ -89,7 +89,7 @@ def video_download(url):
 if __name__ == "__main__":
     rc_code = video_download("https://www.ikcest.org/MediaStore/site/site2024/video/2024/07/08/a1.mp4")
     print(rc_code)
-    
+    "https://www.ikcest.org/MediaStore/site/site2024/video/2024/07/08/a2.mp4"
     
         
     

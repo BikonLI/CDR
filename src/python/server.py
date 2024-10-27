@@ -8,6 +8,7 @@ from typing import *
 
 que = queue.Queue()
 flag: Literal["AFT", "EOP", "AFP"] = "AFT" # ["await for task", "end of processing", "await for processing"]
+url_producing = ""
 
 news = ""
 result = ["", ]
@@ -16,16 +17,17 @@ result = ["", ]
 app = Flask(__name__)
 @app.route("/detect/", methods=["POST"])
 def detect():
-    req: dict = request.get_json()
-    url = req.get("VIDEO_URL")
-    que.put(url)
     global flag
 
     if flag == "AFT":
         # 等待任务，返回需要时间处理
+        req: dict = request.get_json()
+        url = req.get("VIDEO_URL")
+        url_producing = url
+        que.put(url)
         return {"state": "后台正在处理，耐心等待。", "result": ""}, 200, {"Content-Type": "application/json"}
     elif flag == "AFP":
-        return {"state": "后台正在处理，耐心等待", "result": ""}, 200, {"Content-Type": "application/json"}
+        return {"state": f"后台正在处理{url_producing}，耐心等待", "result": ""}, 200, {"Content-Type": "application/json"}
     elif flag == "EOP":
         prompt = " ".join(result)
         flag = "AFT"
