@@ -271,7 +271,6 @@ def len_subdir(path):
             
 def main():
     while True:
-        setFlag("AFT")
         response = getJson()
         url = response.get("url")
         print(f"url=\"{url}\"")
