@@ -21,6 +21,7 @@ from path_config import config
 from url_parse import video_download
 from event_detection import Event
 import requests
+from get_team_name import *
 
 
 # 文件结构
@@ -217,7 +218,9 @@ def update():
     return 0
 
 def gen_prompt():
-    prompt_list = Event(config.analyze).detect()
+    team1, score1, score2, team2, = detect_team_name(config.frame_video / "00000.jpg")
+    prompt_list = Event(config.analyze, team1, team2).detect()
+    prompt_list.insert(0, f"{team1}比{team2}为{score1}:{score2}")
     prompt = {"prompt": prompt_list}
     print(prompt)
     setFlag("EOP")

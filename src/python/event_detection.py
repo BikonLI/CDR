@@ -224,6 +224,7 @@ class Event:
                 final_result.append(event)
         
         final_result = final_result[::-1]
+        print(final_result)
                                 
         prompt_list = []
         attack_event = []
@@ -283,7 +284,13 @@ class Event:
                         else:
                             prompt_list.append(f"{self.right_team}进球了")
                 goal_event.append(event)
-        
+                
+            if index >= 4:
+                if final_result[index - 1][1] in ["left", "right"] and \
+                final_result[index - 2][1] in ["left", "right"] and \
+                final_result[index - 3][1] in ["left", "right"]:
+                    prompt_list.append(f"{self.left_team}和{self.right_team}周旋")
+                
         return prompt_list
         
 

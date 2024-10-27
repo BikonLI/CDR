@@ -43,8 +43,8 @@ def predict1(img):
 
     # 调整图像大小
     img = cv2.resize(img, (new_width, new_height), interpolation=cv2.INTER_LINEAR)
-    cv2.imshow("number", img)
-    cv2.waitKey(300)
+    # cv2.imshow("number", img)
+    # cv2.waitKey(300)
 
     # cv2.imshow("small", img)
 
@@ -70,6 +70,47 @@ def predict1(img):
     return number
     
 predict = predict1
+
+def predict_character(img):
+        
+    if not is_color_image(img):
+        return ""
+    
+    # 计算新尺寸
+    global parseq
+    scale_factor = 2
+    new_width = int(img.shape[1] * scale_factor)
+    new_height = int(img.shape[0] * scale_factor)
+
+    # 调整图像大小
+    img = cv2.resize(img, (new_width, new_height), interpolation=cv2.INTER_LINEAR)
+    cv2.imshow("number", img)
+    cv2.waitKey(300)
+
+    # cv2.imshow("small", img)
+
+    # Load model and image transforms
+    
+    img_transform = SceneTextDataModule.get_transform(parseq.hparams.img_size)
+    
+    # Preprocess. Model expects a batch of images with shape: (B, C, H, W)
+    # img = torch.from_numpy(img)
+    img = Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))  # 转换为 RGB 格式
+    img = img_transform(img).unsqueeze(0)
+
+    logits = parseq(img)
+    logits.shape  # torch.Size([1, 26, 95]), 94 characters + [EOS] symbol
+
+    # Greedy decoding
+    pred = logits.softmax(-1)
+    label, confidence = parseq.tokenizer.decode(pred)
+    
+    return label
+
+def predict_character_ocr(img):
+    custom_config = r'--oem 3 --psm 7'
+    recognized_text = pytesseract.image_to_string(img, lang="chi_sim")
+    return recognized_text
 
 
 def getRectangle(img,  rectangle: tuple[tuple[int, int]]):
