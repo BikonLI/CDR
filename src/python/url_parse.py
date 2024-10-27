@@ -69,7 +69,7 @@ def video_download(url):
     for key, value in video_info.items():
         max_value = int(value["folder"]) if int(value["folder"]) > max_value else max_value
         
-    video_info[video_path] = {"progress": [], "folder": f"{max_value}"}
+    video_info[video_path] = {"progress": [], "folder": f"{max_value}", "map": {}}
     
     with open(config.VIDEO_INFO_JSON, "w", encoding="utf-8") as f:
         json.dump(video_info, f)

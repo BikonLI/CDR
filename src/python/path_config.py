@@ -33,7 +33,8 @@ class Config:
         self.PLAYERS_DIR.mkdir(exist_ok=True)
         self.POSE_RESULTS.mkdir(exist_ok=True)
         if not self.VIDEO_INFO_JSON.exists():
-            self.reset_info()
+            with open(self.VIDEO_INFO_JSON, "w", encoding="utf-8") as f:
+                pass
         
         self.ANALYZE.mkdir(exist_ok=True)
             
