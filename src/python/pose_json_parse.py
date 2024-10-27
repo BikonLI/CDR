@@ -4,17 +4,16 @@ import os
 
 
 def get_keypoint(path):
-    with open(path, "r", encoding="utf-8") as f:
-        try:
-            data = json.load(f)
-            try:
-                points_conf = data["people"][0]["pose_keypoints_2d"]
-            except Exception:
-                return None
-
-        except Exception as e:
-            return None
-        
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                try:
+                    points_conf = data["people"][0]["pose_keypoints_2d"]
+                except Exception:
+                    return None
+    except Exception:
+        return None
+    
     points = [points_conf[i:i+3] for i in range(0, len(points_conf) - 3, 3)]
     
     rsholder = points[2][:2]
