@@ -136,7 +136,7 @@ class Config:
                 "a4.mp4": {"progress": [], "folder": "3", "map": {}}, 
                 }, f)
             
-    def get_info(self):
+    def get_info(self) -> dict[dict]:
         with open(self.VIDEO_INFO_JSON, "r", encoding="utf-8") as f:
             info = json.load(f)
         

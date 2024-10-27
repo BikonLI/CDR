@@ -221,6 +221,7 @@ def gen_prompt():
     team1, score1, score2, team2, = detect_team_name(config.frame_video / "00000.jpg")
     prompt_list = Event(config.analyze, team1, team2).detect()
     prompt_list.insert(0, f"{team1}比{team2}为{score1}:{score2}")
+    prompt_list.insert(0, f"球员编号 {[key for key, value in config.get_info()["map"].items()]}")
     prompt = {"prompt": prompt_list}
     print(prompt)
     setFlag("EOP")
