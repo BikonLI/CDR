@@ -9,7 +9,7 @@ from typing import *
 from ultralytics import YOLO
 from OCR import predict
 from slicenumberarea import sliceNumberArea as sna
-from client import getJson
+from client import getJson, setFlag
 from pose_detect import getRectangle
 from bayes_model_new import (
     update_probabilities1 as update_p,
@@ -219,14 +219,18 @@ def update():
 def gen_prompt():
     prompt_list = Event(config.analyze).detect()
     prompt = {"prompt": prompt_list}
+    setFlag("EOP")
     requests.post("http://49.233.183.144:11451/processresult/", json=prompt)
     
 def process_all(url):
     
-    rcode = video_download(url)
-    if rcode != 0:
-        return -1
-    
+    try:
+        rcode = video_download(url)
+        if rcode != 0:
+            return -1
+    except Exception:
+        print("视频下载失败，链接不合法")
+        
     with open(config.RAW_VIDEO_DIR / "mapping.json", "r", encoding="utf-8") as f:
         url_map_path = json.load(f)
         
@@ -237,6 +241,9 @@ def process_all(url):
     pose()
     recognize()
     update()
+    
+    time.sleep(1)
+    setFlag("AFT")
     
     return 0
 
