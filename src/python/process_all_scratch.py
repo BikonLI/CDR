@@ -242,7 +242,10 @@ def process_all(url):
     pose()
     recognize()
     update()
-    
+    try:
+        gen_prompt()
+    except Exception as e:
+        print(f"网络错误 {e}")
     time.sleep(1)    
     return 0
 
