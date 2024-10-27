@@ -10,35 +10,20 @@
 通常映射关系为`{"Index1": [trackId1, trackId2, ...]}`。
 然后分析事件（传球，射门，进球），并将这些事件与球员进行关联。最后工作流结束，智能体输出结果。
 
-### 路径配置标准
-```
-root/
-    project/
-        src/
-            python/
-                configs/
-                strhub/
-                *.py
-            c/
-    test_stage2/
-    train_stage2/
-    val_stage2/
-    *.json    # 程序运行产生的文件，通常是用来记录脚本运行进度的，防止程序被杀停之后的重新运行。
-    raw_videos/     # 原视频下载目录
-    frames/         # 视频帧提取目录
-
-    README.md
-
----
-openpose/    # 需要配置环境变量，若要访问此文件夹下的文件，需要使用绝对路径
-    results/
-        1200/
-        1201/
-            *.json
-        ...
-        name.txt
-
----
 ```
 工作流工作内容->
 下载视频->提取帧->检测加识别并保存结果到磁盘->OCR检测ID并更新磁盘中的结果
+```
+
+### 部署
+服务器运行：
+```bash
+python src/python/server.py
+```
+
+算力部署平台运行：
+```bash
+python src/python/process_all_scratch.py
+```
+
+可以使用本地的电脑进行推理。
