@@ -219,10 +219,8 @@ def update():
 def gen_prompt():
     prompt_list = Event(config.analyze).detect()
     prompt = {"prompt": prompt_list}
-    requests.post()
+    requests.post("http://49.233.183.144:11451/processresult/", json=prompt)
     
-        
-
 def process_all(url):
     
     rcode = video_download(url)

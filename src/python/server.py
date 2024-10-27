@@ -41,7 +41,7 @@ def url():
         url = que.get(block=False)
     return {"url": url}
 
-@app.route("/process_result/")
+@app.route("/processresult/")
 def result():
     prompt = request.args("prompt", [])
     print(prompt)
