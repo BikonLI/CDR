@@ -23,12 +23,12 @@ def detect():
 
     if flag == "AFT":
         # 等待任务，返回需要时间处理
-        return {"state": "Needing time for processing your video, please wait. You can send the url again to see the progress!", "result": ""}, 200, {"Content-Type": "application/json"}
+        return {"state": "后台正在处理，耐心等待。", "result": ""}, 200, {"Content-Type": "application/json"}
     elif flag == "AFP":
-        return {"state": "Needing time for processing your video, please wait. You can send the url again to see the progress!", "result": ""}, 200, {"Content-Type": "application/json"}
+        return {"state": "后台正在处理，耐心等待", "result": ""}, 200, {"Content-Type": "application/json"}
     elif flag == "EOP":
         prompt = " ".join(result)
-        return {"state": "Finished!", "result": prompt}, 200, {"Content-Type": "application/json"}
+        return {"state": "处理完成!", "result": prompt}, 200, {"Content-Type": "application/json"}
 
 @app.route("/")
 def test():
