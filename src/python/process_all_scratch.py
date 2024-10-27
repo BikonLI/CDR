@@ -219,6 +219,7 @@ def update():
 def gen_prompt():
     prompt_list = Event(config.analyze).detect()
     prompt = {"prompt": prompt_list}
+    print(prompt)
     setFlag("EOP")
     requests.post("http://49.233.183.144:11451/processresult/", json=prompt)
     
