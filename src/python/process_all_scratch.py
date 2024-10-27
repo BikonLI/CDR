@@ -221,7 +221,8 @@ def gen_prompt():
     prompt = {"prompt": prompt_list}
     print(prompt)
     setFlag("EOP")
-    requests.post("http://49.233.183.144:11451/processresult/", json=prompt)
+    response = requests.post("http://49.233.183.144:11451/processresult/", json=prompt)
+    print(f"processresult={response.text}")
     
 def process_all(url):
     
@@ -272,7 +273,6 @@ def main():
         print(f"url=\"{url}\"")
         if url:
             rcode = process_all(url)
-            break
             
         time.sleep(3)
 

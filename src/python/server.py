@@ -10,7 +10,7 @@ que = queue.Queue()
 flag: Literal["AFT", "EOP", "AFP"] = "AFT" # ["await for task", "end of processing", "await for processing"]
 
 news = ""
-result = None
+result = ["", ]
 
 
 app = Flask(__name__)
@@ -42,12 +42,15 @@ def url():
         url = que.get(block=False)
     return {"url": url}
 
-@app.route("/processresult/")
-def result():
-    prompt = request.args("prompt", [])
+@app.route("/processresult/", methods=["POST"])
+def processresult():
+    prompt = request.get_json()
     print(prompt)
     global result
-    result = prompt
+    result = prompt.get("prompt")
+    if result is None:
+        result = ["", ]
+    return "returned to intelli-body"
     
 @app.route("/updateflag/")
 def updateflag():
