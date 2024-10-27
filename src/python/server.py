@@ -18,6 +18,7 @@ app = Flask(__name__)
 @app.route("/detect/", methods=["POST"])
 def detect():
     global flag
+    global url_producing
 
     if flag == "AFT":
         # 等待任务，返回需要时间处理
