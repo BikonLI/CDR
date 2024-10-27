@@ -28,6 +28,7 @@ def detect():
         return {"state": "后台正在处理，耐心等待", "result": ""}, 200, {"Content-Type": "application/json"}
     elif flag == "EOP":
         prompt = " ".join(result)
+        flag = "AFT"
         return {"state": "处理完成!", "result": prompt}, 200, {"Content-Type": "application/json"}
 
 @app.route("/")

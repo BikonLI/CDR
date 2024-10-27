@@ -242,9 +242,7 @@ def process_all(url):
     recognize()
     update()
     
-    time.sleep(1)
-    setFlag("AFT")
-    
+    time.sleep(1)    
     return 0
 
    
