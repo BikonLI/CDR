@@ -87,7 +87,6 @@ def getJson():
 def setFlag(flag: Literal["AFT", "EOP", "AFP"] = "AFP"):
     # params={"flag": flag}
     response = requests.get("http://49.233.183.144:11451/updateflag/", params={"flag": flag})
-    print(response.text)
     return response.status_code
 
 if __name__ == "__main__":

@@ -89,7 +89,10 @@ class Event:
                     else: pass
             
             last_frame = frame
-            average_offset = sum(offset_list) / count
+            try:
+                average_offset = sum(offset_list) / count
+            except ZeroDivisionError:
+                average_offset = 0
             total_offset_list.append(average_offset)
                     
         result_list = []
@@ -189,7 +192,10 @@ class Event:
 
                 total_distance += distance
         
-        average_distance = total_distance / len(peoples)
+        try:
+            average_distance = total_distance / len(peoples)
+        except ZeroDivisionError:
+            average_distance = 100000
         
         return average_distance
     

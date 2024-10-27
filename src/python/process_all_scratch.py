@@ -245,10 +245,8 @@ def process_all(url):
     pose()
     recognize()
     update()
-    try:
-        gen_prompt()
-    except Exception as e:
-        print(f"网络错误 {e}")
+    gen_prompt()
+
     time.sleep(1)    
     return 0
 
@@ -270,6 +268,7 @@ def len_subdir(path):
             
 def main():
     while True:
+        setFlag("AFT")
         response = getJson()
         url = response.get("url")
         print(f"url=\"{url}\"")
