@@ -4,6 +4,7 @@ import subprocess
 import time
 import cv2
 import json
+import re
 from pathlib import Path
 from typing import *
 from ultralytics import YOLO
@@ -18,7 +19,7 @@ from bayes_model_new import (
 )
 from player_classification import Container
 from path_config import config
-from url_parse import video_download
+from url_parse import video_download, get_url_from_html
 from event_detection import Event
 import requests
 from get_team_name import *
@@ -273,7 +274,11 @@ def len_subdir(path):
 def main():
     while True:
         response = getJson()
-        url = response.get("url")
+        url: str = response.get("url")
+        
+        if url.split(".")[-1] == "html":
+            url = get_url_from_html(url)
+        
         print(f"url=\"{url}\"")
         if url:
             rcode = process_all(url)

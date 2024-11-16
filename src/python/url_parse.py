@@ -6,6 +6,9 @@ import requests
 from path_config import config
 import string
 import random
+from bs4 import BeautifulSoup
+import requests
+from urllib.parse import urljoin
 
 
 if not (config.RAW_VIDEO_DIR / "mapping.json").exists():
@@ -86,11 +89,35 @@ def video_download(url):
     return 0
 
 
+def get_url_from_html(url: str):
+    try:
+        response = requests.get(url)
+        if response.status_code == 200:
+            soup = BeautifulSoup(response.text, 'html.parser')
+
+            video_tags = soup.find_all('video')
+            for idx, video in enumerate(video_tags, start=1):
+                video_src = video.get('src')
+                if video_src:
+                    full_video_url = urljoin(url, video_src)
+                    print(f"视频 {idx} 的完整链接: {full_video_url}")
+                else:
+                    print(f"视频 {idx} 没有直接的 src 属性")
+
+        else:
+            print(f"无法访问网页，状态码: {response.status_code}")
+            
+    except:
+        print("获取html时发生了网络错误！")
+        return None
+    
+    return full_video_url
+
 if __name__ == "__main__":
     rc_code = video_download("https://www.ikcest.org/MediaStore/site/site2024/video/2024/07/08/a1.mp4")
     print(rc_code)
     "https://www.ikcest.org/MediaStore/site/site2024/video/2024/07/08/a2.mp4"
-    
+    "https://www.ikcest.org/MediaStore/site/site2024/video/2024/07/08/a3.mp4"
         
     
         
